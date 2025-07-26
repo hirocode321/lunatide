@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+
+{% block title %}送信完了{% endblock %}
+
+{% block content %}
+<div class="completion-container">
+    <h1>送信完了</h1>
+    <p>ご入力ありがとうございました。</p>
+    <a href="{{ url_for('index') }}" class="btn btn-primary btn-back">戻る</a>
+</div>
+{% endblock %}

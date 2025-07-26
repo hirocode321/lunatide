@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block title %}ログインフォーム{% endblock %}
+
+{% block content %}
+    <h1 class="text-center">管理画面</h1>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <p style="color: {{ 'red' if category == 'danger' else 'green' }}">{{ message }}</p>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+    <form method="POST" action="{{ url_for('login') }}">
+        <div class="mb-3">
+            <label for="username" class="form-label">ユーザー名</label>
+            <input type="text" class="form-control" id="username" name="username" required>
+        </div>
+        <div class="mb-3">
+            <label for="password" class="form-label">パスワード</label>
+            <input type="password" class="form-control" id="password" name="password" required>
+        </div>
+        <button type="submit" class="btn btn-primary">ログイン</button>
+    </form>
+    <div class="text-end mt-3">
+        <a href="/" class="btn btn-outline-secondary">戻る</a>
+    </div>
+{% endblock %}

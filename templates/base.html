@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}LunaTide{% endblock %}</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <!-- <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}"> -->
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+            <div class="container-fluid">
+                <a class="navbar-brand" href="/">
+                    LunaTide
+                    <img src="{{ url_for('static', filename='logo_image/logo2.webp') }}" alt="LunaTide ロゴ" class="me-2" style="height: 40px;">
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav ms-auto">
+                        <li class="nav-item">
+                            <a class="nav-link" href="/">カレンダー</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/moon">月の情報</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/tide">潮の満ち引き</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/astro">天文情報</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/contact">お問い合わせ</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/login">管理画面</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container my-4">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white text-center py-3">
+        <p class="mb-0">&copy; 2025 LunaTide. All Rights Reserved.</p>
+        <p class="mb-0">
+            <a href="/privacy" class="text-white text-decoration-none">プライバシーポリシー</a> |
+            <a href="/terms" class="text-white text-decoration-none">利用規約</a>
+        </p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

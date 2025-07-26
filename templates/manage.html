@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block title %}データベース管理{% endblock %}
+
+{% block content %}
+    <div class="container mt-5">
+        <h1 class="mb-4">データベース管理画面</h1>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <p style="color: {{ 'red' if category == 'danger' else 'green' }}">{{ message }}</p>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        <p>このデータを本当に削除しますか？</p>
+        <form action="/manage/{{ db_data[0][0] }}" method="post" class="mb-4">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <div class="mb-3">
+                <table class="table table-bordered table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th class="text-center">ID</th>
+                            <th class="text-center">名前</th>
+                            <th class="text-center">メール</th>
+                            <th class="text-center">年齢</th>
+                            <th class="text-center">内容</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>{{ db_data[0][0] }}</td>
+                            <td>{{ db_data[0][1] }}</td>
+                            <td>{{ db_data[0][2] }}</td>
+                            <td>{{ db_data[0][3] }}</td>
+                            <td>{{ db_data[0][4] }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <button type="submit" class="btn btn-danger">削除</button>
+        </form>
+        <div class="d-flex justify-content-between">
+            <a href="/database" class="btn btn-outline-secondary">データベース画面へ</a>
+            <a href="/logout" class="btn btn-outline-secondary">ログアウト</a>
+        </div>
+    </div>
+{% endblock %}

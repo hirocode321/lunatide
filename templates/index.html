@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block title %}月齢カレンダー{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+    <div class="text-center">
+        <h1>{{ year }}年{{ month }}月の月齢カレンダー</h1>
+    </div>
+
+    <div class="d-flex justify-content-center my-4">
+        <a href="/?year={{ prev_year }}&month={{ prev_month }}" class="btn btn-primary mx-2">前月</a>
+        <a href="/?year={{ next_year }}&month={{ next_month }}" class="btn btn-primary mx-2">次月</a>
+    </div>
+
+    <!-- レスポンシブ対応 -->
+    <div class="table-responsive">
+        <table class="table table-bordered table-striped">
+            <thead>
+                <tr>
+                    <th class="text-center bg-danger bg-opacity-85 text-white">日</th>
+                    <th class="text-center">月</th>
+                    <th class="text-center">火</th>
+                    <th class="text-center">水</th>
+                    <th class="text-center">木</th>
+                    <th class="text-center">金</th>
+                    <th class="text-center bg-primary bg-opacity-85 text-white">土</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    {% for day, weekday in days %}
+                        {% if loop.index0 % 7 == 0 and not loop.first %}
+                            </tr>
+                            <tr>
+                        {% endif %}
+                        <td class="
+                            {% if day > 0 %}
+                                {% if year == today.year and month == today.month and day == today.day %}
+                                    bg-warning
+                                {% elif moon_images[loop.index0] %}
+                                    {% if weekday == 6 %}bg-primary bg-opacity-75 text-white{% elif weekday == 0 %}bg-danger bg-opacity-75 text-white{% endif %}
+                                {% endif %}
+                            {% endif %}
+                        ">
+                            {% if day > 0 %}
+                                <div class="text-center">{{ day }}</div>
+                                {% if moon_images[loop.index0] %}
+                                    <div class="text-center mt-2">
+                                        <img src="{{ url_for('static', filename=moon_images[loop.index0]) }}" alt="月齢画像" class="img-fluid" style="width: 30px; height: 30px;" />
+                                        <br>
+                                        <p><span class="moon-label">月齢:</span> {{ moon_ages[loop.index0] }}</p>
+                                    </div>
+                                {% else %}
+                                    <div class="text-center mt-2">
+                                        <img src="{{ url_for('static', filename='images/placeholder.png') }}" alt="月齢画像" class="img-fluid" style="width: 30px; height: 30px;" />
+                                        <br>
+                                        <p><span class="moon-label">月齢:</span> -</p>
+                                    </div>
+                                {% endif %}
+                            {% endif %}
+                        </td>
+                    {% endfor %}
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- スマホサイズで月齢の文字部分だけを非表示にするためのCSS -->
+    <style>
+        @media (max-width: 768px) {
+            .moon-label {
+                display: none;
+            }
+        }
+    </style>
+
+</div>
+{% endblock %}

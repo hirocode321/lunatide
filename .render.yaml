@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: lunatide  # サービス名（任意の識別名）
+    runtime: python
+    region: Singapore  # RenderのTokyoリージョンが使える場合はこれでOK
+    buildCommand: ""  # Flaskはビルド不要
+    startCommand: gunicorn app:app  # ファイル名(app.py):Flaskアプリのインスタンス(app)
+    plan: free
+    envVars:
+      - key: FLASK_ENV
+        value: production
+      - key: SECRET_KEY
+        value: your-secret-key-here  # 本番用にちゃんとしたランダム文字列に変更すること
