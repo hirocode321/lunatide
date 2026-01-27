@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block title %}{{ year }}年{{ month }}月{{ day }}日の月 - LunaTide{% endblock %}
+
+{% block content %}
+<div class="container my-5 fade-in">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('main.index') }}">トップ</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('main.index', year=year, month=month) }}">{{ year }}年{{
+                    month }}月</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{ day }}日</li>
+        </ol>
+    </nav>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <a href="{{ url_for('main.moon_detail', year=prev_date.year, month=prev_date.month, day=prev_date.day) }}"
+                    class="btn btn-outline-light rounded-pill px-4">
+                    <i class="fas fa-arrow-left me-2"></i>前日
+                </a>
+                <h1 class="h3 mb-0">{{ year }}年{{ month }}月{{ day }}日</h1>
+                <a href="{{ url_for('main.moon_detail', year=next_date.year, month=next_date.month, day=next_date.day) }}"
+                    class="btn btn-outline-light rounded-pill px-4">
+                    翌日<i class="fas fa-arrow-right ms-2"></i>
+                </a>
+            </div>
+
+            <div class="card bg-dark border-0 shadow-lg overflow-hidden position-relative mb-5">
+                <div class="moon-glow"></div>
+                <div class="card-body p-5 text-center position-relative" style="z-index: 1;">
+                    <div class="mb-4">
+                        {% if moon_image %}
+                        <img src="{{ url_for('static', filename=moon_image) }}"
+                            alt="Moon Phase for {{ year }}-{{ month }}-{{ day }}" class="img-fluid"
+                            style="max-width: 300px; filter: drop-shadow(0 0 20px rgba(255,255,255,0.3));">
+                        {% else %}
+                        <div class="text-secondary py-5">画像データがありません</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-2">
+                        <span class="text-secondary small text-uppercase letter-spacing-2">Moon Age</span>
+                    </div>
+                    <div class="display-4 font-monospace fw-bold text-primary mb-3">
+                        {{ moon_age if moon_age is not none else '-' }}
+                    </div>
+
+                    {% if moon_name %}
+                    <div class="mb-4">
+                        <span
+                            class="badge bg-light text-dark fs-5 px-4 py-2 rounded-pill fw-light border border-white shadow-sm">
+                            {{ moon_name }}
+                        </span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            {% if events %}
+            <div class="mb-5">
+                <h2 class="h4 border-start border-primary border-4 ps-3 mb-4">この日の天文イベント</h2>
+                {% for event in events %}
+                <div class="card bg-dark border border-secondary mb-3 hover-lift">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <span class="badge bg-primary mb-2">{{ event.badge }}</span>
+                                <h3 class="h5 mb-1">
+                                    <a href="{{ url_for('astro.astroinfo', event=event.slug) }}"
+                                        class="text-white text-decoration-none stretched-link">
+                                        {{ event.title }}
+                                    </a>
+                                </h3>
+                                <p class="text-secondary small mb-0">{{ event.description | truncate(60) }}</p>
+                            </div>
+                            {% if event.is_important %}
+                            <div class="text-warning">
+                                <i class="fas fa-star fa-lg"></i>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <div class="text-center">
+                <a href="{{ url_for('main.index', year=year, month=month) }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-calendar-alt me-2"></i>カレンダーに戻る
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

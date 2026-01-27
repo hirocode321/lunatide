@@ -12,6 +12,27 @@ def index_get_moon_images(moon_age):
         return moon_image
     except ValueError:
         return None  # 月齢が無効な場合、画像なし
+
+def get_moon_name(moon_age):
+    """月齢に対応する伝統的な和名を返す"""
+    try:
+        age = round(float(moon_age))
+        if age == 0: return "新月"
+        if age == 3: return "三日月"
+        if age == 7: return "上弦の月"
+        if age == 13: return "十三夜"
+        if age == 15: return "満月"
+        if age == 16: return "十六夜"
+        if age == 17: return "立待月"
+        if age == 18: return "居待月"
+        if age == 19: return "寝待月"
+        if age == 20: return "更待月"
+        if age == 23: return "下弦の月"
+        if age == 26: return "有明の月"
+        if age == 30: return "三十日月"
+        return None
+    except (ValueError, TypeError):
+        return None
     
 # 月齢に対応する画像名を返す関数
 def moon_get_moon_images(moon_age):

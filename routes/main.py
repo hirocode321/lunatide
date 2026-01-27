@@ -1,8 +1,10 @@
-from flask import Blueprint, render_template, request, make_response, url_for
-from datetime import datetime
+from flask import Blueprint, render_template, request, make_response, url_for, abort
+from datetime import datetime, date, timedelta
 import calendar
 import sqlite3
-from models.functions import index_get_moon_images
+from models.functions import index_get_moon_images, get_moon_name
+
+main_bp = Blueprint('main', __name__)
 
 main_bp = Blueprint('main', __name__)
 
@@ -33,15 +35,18 @@ def index():
 
     moon_images = []
     moon_ages = []
+    moon_names = []
 
     for day, weekday in days_in_month:
         if day > 0 and day in db_data:
             moon_age = db_data[day]
             moon_ages.append(moon_age)
             moon_images.append(index_get_moon_images(moon_age))
+            moon_names.append(get_moon_name(moon_age))
         else:
             moon_ages.append(None)
             moon_images.append(None)
+            moon_names.append(None)
 
     # 天文イベントの読み込み(2026年専用)
     import json
@@ -96,6 +101,7 @@ def index():
         days=days_in_month,
         moon_ages=moon_ages,
         moon_images=moon_images,
+        moon_names=moon_names,
         next_month=next_month,
         next_year=next_year,
         prev_month=prev_month,
@@ -135,3 +141,54 @@ def sitemap():
     response = make_response(sitemap_xml)
     response.headers["Content-Type"] = "application/xml"
     return response
+
+@main_bp.route('/moon/<int:year>/<int:month>/<int:day>')
+def moon_detail(year, month, day):
+    try:
+        current_date = date(year, month, day)
+    except ValueError:
+        abort(404)
+
+    # 前日・翌日の計算
+    prev_date = current_date - timedelta(days=1)
+    next_date = current_date + timedelta(days=1)
+
+    # 月齢データの取得
+    conn = sqlite3.connect('inquiries.db')
+    cursor = conn.cursor()
+    cursor.execute('''
+        SELECT moon_age FROM moon_data 
+        WHERE prefecture = '大阪(大阪府)' AND month = ? AND day = ?
+    ''', (month, day))
+    result = cursor.fetchone()
+    
+    moon_age = result[0] if result else None
+    moon_image = index_get_moon_images(moon_age) if moon_age is not None else None
+    moon_name = get_moon_name(moon_age) if moon_age is not None else None
+
+    # イベントデータの取得
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor() # re-cursor for row factory
+    # iso_date start filtering for that day
+    target_iso_start = f"{year}-{month:02d}-{day:02d}"
+    # 簡易的に文字列一致で探す (ISOフォーマット前提: YYYY-MM-DD...)
+    events = cursor.execute('''
+        SELECT * FROM astro_events 
+        WHERE iso_date LIKE ? 
+        ORDER BY iso_date
+    ''', (f"{target_iso_start}%",)).fetchall()
+    
+    conn.close()
+
+    return render_template(
+        'moon_detail.html',
+        year=year,
+        month=month,
+        day=day,
+        moon_age=moon_age,
+        moon_image=moon_image,
+        moon_name=moon_name,
+        events=events,
+        prev_date=prev_date,
+        next_date=next_date
+    )

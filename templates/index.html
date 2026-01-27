@@ -38,27 +38,37 @@
             data-bs-toggle="tooltip" data-bs-placement="top"
             title="{% if day in events_by_day %}{{ events_by_day[day].title }}{% else %}月齢: {{ moon_ages[loop.index0] or '-' }}{% endif %}">
 
-            <div class="day-number">{{ day }}</div>
+            <a href="{{ url_for('main.moon_detail', year=year, month=month, day=day) }}"
+                class="text-decoration-none text-reset d-block h-100 w-100">
+                <div class="day-number">{{ day }}</div>
 
-            <div class="moon-info">
-                {% if moon_images[loop.index0] %}
-                <img src="{{ url_for('static', filename=moon_images[loop.index0]) }}" alt="Moon Phase"
-                    class="moon-img-sm">
-                <div class="moon-age-text d-none d-md-block">{{ moon_ages[loop.index0] }}</div>
-                {% else %}
-                <div style="height: 32px;"></div>
-                {% endif %}
-            </div>
+                <div class="moon-info">
+                    {% if moon_images[loop.index0] %}
+                    <img src="{{ url_for('static', filename=moon_images[loop.index0]) }}" alt="Moon Phase"
+                        class="moon-img-sm">
+                    <div class="moon-age-text d-none d-md-block">{{ moon_ages[loop.index0] }}</div>
+                    {% else %}
+                    <div style="height: 32px;"></div>
+                    {% endif %}
+                </div>
 
-            {% if day in events_by_day %}
-            <div class="event-marker">
-                {% if events_by_day[day].is_important %}
-                <i class="fas fa-star text-warning fa-lg"></i>
-                {% else %}
-                <i class="fas fa-circle text-info fa-xs"></i>
+                {% if moon_names[loop.index0] %}
+                <div class="text-center mt-1">
+                    <span class="badge bg-dark bg-opacity-75 text-white fw-light small">{{ moon_names[loop.index0]
+                        }}</span>
+                </div>
                 {% endif %}
-            </div>
-            {% endif %}
+
+                {% if day in events_by_day %}
+                <div class="event-marker">
+                    {% if events_by_day[day].is_important %}
+                    <i class="fas fa-star text-warning fa-lg"></i>
+                    {% else %}
+                    <i class="fas fa-circle text-info fa-xs"></i>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </a>
         </div>
         {% else %}
         <div class="calendar-day opacity-25" style="background: transparent; border: none;"></div>
