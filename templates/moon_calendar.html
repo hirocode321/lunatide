@@ -6,33 +6,33 @@
 <div class="container my-4">
     <h1 class="text-center">月齢カレンダー</h1>
     {% if moon_data %}
-        <div class="text-center my-4">
-            <!-- 月齢画像 -->
-            <img src="{{ url_for('static', filename='images/' + moon_image) }}" alt="月画像" class="img-fluid">
-        </div>
-        <div class="text-center my-4">
-            <p><strong>都道府県:</strong> {{ prefecture }}</p>
-            <p><strong>日付:</strong> {{ selected_date }}</p>
-            <p><strong>月齢:</strong> {{ moon_data['月齢'] }}</p>
-            <p><strong>月の出:</strong> {{ moon_data['月の出'] }}</p>
-            <p><strong>月の入:</strong> {{ moon_data['月の入'] }}</p>
-        </div>
+    <div class="text-center my-4">
+        <!-- 月齢画像 -->
+        <img src="{{ url_for('static', filename='images/' + moon_image) }}" alt="月画像" class="img-fluid">
+    </div>
+    <div class="text-center my-4">
+        <p><strong>都道府県:</strong> {{ prefecture }}</p>
+        <p><strong>日付:</strong> {{ selected_date }}</p>
+        <p><strong>月齢:</strong> {{ moon_data['月齢'] }}</p>
+        <p><strong>月の出:</strong> {{ moon_data['月の出'] }}</p>
+        <p><strong>月の入:</strong> {{ moon_data['月の入'] }}</p>
+    </div>
     {% else %}
-        <p class="text-center">情報が見つかりませんでした。再度選択してください。</p>
+    <p class="text-center">情報が見つかりませんでした。再度選択してください。</p>
     {% endif %}
-    
-    <form action="/moon_calendar" method="POST" class="text-center my-4">
+
+    <form action="{{ url_for('moon.moon_calendar') }}" method="POST" class="text-center my-4">
         <div class="row justify-content-center">
             <!-- 都道府県選択 -->
             <div class="col-auto">
                 <select name="prefecture" class="form-select" required>
                     <option value="" disabled selected>都道府県を選択</option>
                     {% for pref in prefectures %}
-                        <option value="{{ pref }}" {% if pref == prefecture %}selected{% endif %}>{{ pref }}</option>
+                    <option value="{{ pref }}" {% if pref==prefecture %}selected{% endif %}>{{ pref }}</option>
                     {% endfor %}
                 </select>
             </div>
-            
+
             <!-- 日付選択 -->
             <div class="col-auto">
                 <input type="date" name="date" class="form-control" value="{{ selected_date }}" required>

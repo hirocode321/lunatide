@@ -3,45 +3,46 @@
 {% block title %}確認画面{% endblock %}
 
 {% block content %}
-    <h1>データベース</h1>
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            {% for category, message in messages %}
-                <p style="color: {{ 'red' if category == 'danger' else 'green' }}">{{ message }}</p>
-            {% endfor %}
-        {% endif %}
-    {% endwith %}
-    <table class="table table-bordered table-hover">
-        <thead class="table-dark">
-            <tr>
-                <th class="text-center">ID</th>
-                <th class="text-center">名前</th>
-                <th class="text-center">メール</th>
-                <th class="text-center">年齢</th>
-                <th class="text-center">内容</th>
-                <th class="text-center">消す</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for db_data in db_datas %}
-            <tr>
-                <td>{{ db_data[0] }}</td>
-                <td>{{ db_data[1] }}</td>
-                <td>{{ db_data[2] }}</td>
-                <td>{{ db_data[3] }}</td>
-                <td>{{ db_data[4] }}</td>
-                <td>
-                    <div class="col text-start">
-                        <a href="/manage/{{ db_data[0] }}" class="btn btn-outline-danger" id="{{ db_data[0] }}">消す</a>
-                    </div>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-    <div class="row mt-4">
-        <div class="col text-end">
-            <a href="/logout" class="btn btn-outline-primary">ログアウト</a>
-        </div>
+<h1>データベース</h1>
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+{% for category, message in messages %}
+<p style="color: {{ 'red' if category == 'danger' else 'green' }}">{{ message }}</p>
+{% endfor %}
+{% endif %}
+{% endwith %}
+<table class="table table-bordered table-hover">
+    <thead class="table-dark">
+        <tr>
+            <th class="text-center">ID</th>
+            <th class="text-center">名前</th>
+            <th class="text-center">メール</th>
+            <th class="text-center">年齢</th>
+            <th class="text-center">内容</th>
+            <th class="text-center">消す</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for db_data in db_datas %}
+        <tr>
+            <td>{{ db_data[0] }}</td>
+            <td>{{ db_data[1] }}</td>
+            <td>{{ db_data[2] }}</td>
+            <td>{{ db_data[3] }}</td>
+            <td>{{ db_data[4] }}</td>
+            <td>
+                <div class="col text-start">
+                    <a href="{{ url_for('admin.deleting_record', id=db_data[0]) }}" class="btn btn-outline-danger"
+                        id="{{ db_data[0] }}">消す</a>
+                </div>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+<div class="row mt-4">
+    <div class="col text-end">
+        <a href="{{ url_for('admin.logout') }}" class="btn btn-outline-primary">ログアウト</a>
     </div>
+</div>
 {% endblock %}

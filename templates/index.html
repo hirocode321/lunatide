@@ -9,8 +9,8 @@
     </div>
 
     <div class="d-flex justify-content-center my-4">
-        <a href="/?year={{ prev_year }}&month={{ prev_month }}" class="btn btn-primary mx-2">前月</a>
-        <a href="/?year={{ next_year }}&month={{ next_month }}" class="btn btn-primary mx-2">次月</a>
+        <a href="{{ url_for('main.index', year=prev_year, month=prev_month) }}" class="btn btn-primary mx-2">前月</a>
+        <a href="{{ url_for('main.index', year=next_year, month=next_month) }}" class="btn btn-primary mx-2">次月</a>
     </div>
 
     <!-- レスポンシブ対応 -->
@@ -30,11 +30,11 @@
             <tbody>
                 <tr>
                     {% for day, weekday in days %}
-                        {% if loop.index0 % 7 == 0 and not loop.first %}
-                            </tr>
-                            <tr>
-                        {% endif %}
-                        <td class="
+                    {% if loop.index0 % 7 == 0 and not loop.first %}
+                </tr>
+                <tr>
+                    {% endif %}
+                    <td class="
                             {% if day > 0 %}
                                 {% if year == today.year and month == today.month and day == today.day %}
                                     bg-warning
@@ -43,23 +43,25 @@
                                 {% endif %}
                             {% endif %}
                         ">
-                            {% if day > 0 %}
-                                <div class="text-center">{{ day }}</div>
-                                {% if moon_images[loop.index0] %}
-                                    <div class="text-center mt-2">
-                                        <img src="{{ url_for('static', filename=moon_images[loop.index0]) }}" alt="月齢画像" class="img-fluid" style="width: 30px; height: 30px;" />
-                                        <br>
-                                        <p><span class="moon-label">月齢:</span> {{ moon_ages[loop.index0] }}</p>
-                                    </div>
-                                {% else %}
-                                    <div class="text-center mt-2">
-                                        <img src="{{ url_for('static', filename='images/placeholder.png') }}" alt="月齢画像" class="img-fluid" style="width: 30px; height: 30px;" />
-                                        <br>
-                                        <p><span class="moon-label">月齢:</span> -</p>
-                                    </div>
-                                {% endif %}
-                            {% endif %}
-                        </td>
+                        {% if day > 0 %}
+                        <div class="text-center">{{ day }}</div>
+                        {% if moon_images[loop.index0] %}
+                        <div class="text-center mt-2">
+                            <img src="{{ url_for('static', filename=moon_images[loop.index0]) }}" alt="月齢画像"
+                                class="img-fluid" style="width: 30px; height: 30px;" />
+                            <br>
+                            <p><span class="moon-label">月齢:</span> {{ moon_ages[loop.index0] }}</p>
+                        </div>
+                        {% else %}
+                        <div class="text-center mt-2">
+                            <img src="{{ url_for('static', filename='images/placeholder.png') }}" alt="月齢画像"
+                                class="img-fluid" style="width: 30px; height: 30px;" />
+                            <br>
+                            <p><span class="moon-label">月齢:</span> -</p>
+                        </div>
+                        {% endif %}
+                        {% endif %}
+                    </td>
                     {% endfor %}
                 </tr>
             </tbody>

@@ -3,83 +3,148 @@
 {% block title %}潮の満ち引き{% endblock %}
 
 {% block content %}
-    <div class="container mt-4">
-        <h1 class="text-center">干潮満潮のグラフ</h1>
+<div class="container mt-4 fade-in">
+    <h1 class="text-center mb-4">干潮満潮のグラフ</h1>
 
-        <div id="result" class="mt-4 mb-1 text-center">
-            <img id="tide-image" src="" alt="Tide Graph" class="img-fluid d-none">
+    <div class="card mb-4">
+        <div class="card-body text-center p-4">
+            <p class="mb-3 text-secondary">現在地から最寄りの港を自動で見つけます</p>
+            <button type="button" id="btn-geolocation" class="btn btn-primary px-4 py-2 shadow-sm">
+                <i class="fas fa-location-arrow me-2"></i>現在地から取得
+            </button>
+            <div id="geo-status" class="small mt-2 text-info d-none">位置情報を計算中...</div>
+        </div>
+    </div>
+
+    <div id="result" class="mt-4 mb-4 text-center">
+        <img id="tide-image" src="" alt="Tide Graph" class="img-fluid d-none shadow rounded">
+    </div>
+
+    <form id="tide-form" class="card p-4">
+        <div class="mb-3">
+            <label for="region" class="form-label">地域を選択</label>
+            <select id="region" class="form-select" required>
+                <option value="" selected disabled>地域を選択してください</option>
+                {% for region, code in pc_code.items() %}
+                <option value="{{ code }}">{{ region }}</option>
+                {% endfor %}
+            </select>
         </div>
 
-        <form id="tide-form">
-            <div class="mb-3">
-                <label for="region" class="form-label">地域を選択</label>
-                <select id="region" class="form-select" required>
-                    <option value="" selected disabled>地域を選択してください</option>
-                    {% for region, code in pc_code.items() %}
-                        <option value="{{ code }}">{{ region }}</option>
-                    {% endfor %}
-                </select>
-            </div>
+        <div class="mb-3">
+            <label for="port" class="form-label">港を選択</label>
+            <select id="port" class="form-select" required>
+                <option value="" selected disabled>まず地域を選択してください</option>
+            </select>
+        </div>
 
-            <div class="mb-3">
-                <label for="port" class="form-label">港を選択</label>
-                <select id="port" class="form-select" required>
-                    <option value="" selected disabled>まず地域を選択してください</option>
-                </select>
-            </div>
+        <div class="mb-3">
+            <label for="date" class="form-label">日付を選択</label>
+            <input type="date" id="date" class="form-control" value="{{ today }}" required>
+        </div>
 
-            <div class="mb-3">
-                <label for="date" class="form-label">日付を選択</label>
-                <input type="date" id="date" class="form-control" value="{{ today }}" required>
-            </div>
+        <button type="submit" class="btn btn-outline-primary w-100 py-2">
+            グラフを表示
+        </button>
+    </form>
 
-            <button type="submit" class="btn btn-primary">表示</button>
-        </form>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $("#region").change(function () {
+                const pc = $(this).val();
+                loadPorts(pc);
+            });
 
-        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-        <script>
-            $(document).ready(function() {
-                $("#region").change(function() {
-                    const pc = $(this).val();
-                    $("#port").empty().append('<option value="" disabled selected>Loading...</option>');
-                    $.getJSON(`/get_ports/${pc}`, function(data) {
-                        $("#port").empty().append('<option value="" disabled selected>港を選択してください</option>');
-                        $.each(data, function(key, value) {
-                            $("#port").append(`<option value="${key}">${value}</option>`);
-                        });
+            function loadPorts(pc, callback) {
+                $("#port").empty().append('<option value="" disabled selected>Loading...</option>');
+                $.getJSON(`/get_ports/${pc}`, function (data) {
+                    $("#port").empty().append('<option value="" disabled selected>港を選択してください</option>');
+                    $.each(data, function (key, value) {
+                        $("#port").append(`<option value="${key}">${value}</option>`);
                     });
+                    if (callback) callback();
                 });
-        
-                $("#tide-form").submit(function(e) {
-                    e.preventDefault();
-                    const pc = $("#region").val();
-                    const hc = $("#port").val();
-                    const date = $("#date").val();
-        
-                    if (!pc || !hc || !date) {
-                        alert("全てのフィールドを入力してください。");
-                        return;
-                    }
-        
-                    $.ajax({
-                        url: "/get_image_url",
-                        type: "POST",
-                        contentType: "application/json",
-                        data: JSON.stringify({ pc, hc, date }),
-                        success: function(data) {
-                            if (data.image_url) {
-                                $("#tide-image").attr("src", data.image_url).removeClass("d-none");
-                            } else {
-                                alert("画像URLの生成に失敗しました。");
-                            }
-                        },
-                        error: function() {
-                            alert("エラーが発生しました。再試行してください。");
+            }
+
+            $("#tide-form").submit(function (e) {
+                e.preventDefault();
+                const pc = $("#region").val();
+                const hc = $("#port").val();
+                const date = $("#date").val();
+
+                if (!pc || !hc || !date) {
+                    alert("全てのフィールドを入力してください。");
+                    return;
+                }
+
+                $.ajax({
+                    url: "/get_image_url",
+                    type: "POST",
+                    contentType: "application/json",
+                    data: JSON.stringify({ pc, hc, date }),
+                    success: function (data) {
+                        if (data.image_url) {
+                            $("#tide-image").attr("src", data.image_url).removeClass("d-none");
+                            $('html, body').animate({
+                                scrollTop: $("#result").offset().top - 100
+                            }, 500);
+                        } else {
+                            alert("画像URLの生成に失敗しました。");
                         }
-                    });
+                    },
+                    error: function () {
+                        alert("エラーが発生しました。再試行してください。");
+                    }
                 });
             });
-        </script>
 
-    </div>
+            // Geolocation
+            $("#btn-geolocation").click(function () {
+                if (!navigator.geolocation) {
+                    alert("お使いのブラウザは位置情報に対応していません。");
+                    return;
+                }
+
+                $("#geo-status").removeClass("d-none").text("位置情報を取得中...");
+
+                navigator.geolocation.getCurrentPosition(
+                    function (position) {
+                        const lat = position.coords.latitude;
+                        const lng = position.coords.longitude;
+
+                        $("#geo-status").text("最寄りの港を計算中...");
+
+                        $.ajax({
+                            url: "/get_nearest_port",
+                            type: "POST",
+                            contentType: "application/json",
+                            data: JSON.stringify({ lat, lng }),
+                            success: function (data) {
+                                if (data.pc !== undefined) {
+                                    $("#region").val(data.pc);
+                                    loadPorts(data.pc, function () {
+                                        $("#port").val(data.hc);
+                                        $("#geo-status").text("最寄りの地域を選択しました。");
+                                        setTimeout(() => {
+                                            $("#geo-status").addClass("d-none");
+                                        }, 3000);
+                                    });
+                                }
+                            },
+                            error: function () {
+                                $("#geo-status").addClass("d-none");
+                                alert("最寄りの港の取得に失敗しました。");
+                            }
+                        });
+                    },
+                    function (error) {
+                        $("#geo-status").addClass("d-none");
+                        alert("位置情報の取得に失敗しました。許可設定を確認してください。");
+                    }
+                );
+            });
+        });
+    </script>
+</div>
 {% endblock %}

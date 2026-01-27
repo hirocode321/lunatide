@@ -9,13 +9,13 @@
     <p><strong>メールアドレス:</strong> {{ form_data['email'] }}</p>
     <p><strong>年齢:</strong> {{ form_data['age'] }}</p>
     <p><strong>問い合わせ内容:</strong><br>{{ form_data['content'] }}</p>
-    
+
     <form method="post">
         <button type="submit" class="btn btn-primary btn-submit">送信</button>
     </form>
-    
+
     <p class="btn-back mt-2">
-        <a href="{{ url_for('contact') }}" class="btn btn-outline-secondary">修正する</a>
+        <a href="{{ url_for('admin.contact') }}" class="btn btn-outline-secondary">修正する</a>
     </p>
 </div>
 {% endblock %}

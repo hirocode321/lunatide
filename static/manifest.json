@@ -1,0 +1,21 @@
+{
+    "name": "LunaTide - 月と潮汐の美しき導き",
+    "short_name": "LunaTide",
+    "description": "月齢、潮汐、そして天体イベントを美しく、正確に。あなたの夜空への案内人。",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#0b0e14",
+    "theme_color": "#0b0e14",
+    "icons": [
+        {
+            "src": "/static/icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "/static/icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        }
+    ]
+}

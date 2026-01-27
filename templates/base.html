@@ -11,6 +11,12 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <!-- PWA Meta Tags -->
+    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+    <meta name="theme-color" content="#0b0e14">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='icon-192.png') }}">
 </head>
 
 <body class="fade-in">
@@ -19,7 +25,7 @@
     <header>
         <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
             <div class="container-fluid">
-                <a class="navbar-brand" href="/">
+                <a class="navbar-brand" href="{{ url_for('main.index') }}">
                     LunaTide
                     <img src="{{ url_for('static', filename='logo_image/logo2.webp') }}" alt="LunaTide ロゴ" class="me-2"
                         style="height: 40px;">
@@ -31,22 +37,22 @@
                 <div class="collapse navbar-collapse" id="navbarNav">
                     <ul class="navbar-nav ms-auto">
                         <li class="nav-item">
-                            <a class="nav-link" href="/">カレンダー</a>
+                            <a class="nav-link" href="{{ url_for('main.index') }}">カレンダー</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="/moon">月の情報</a>
+                            <a class="nav-link" href="{{ url_for('moon.moon') }}">月の情報</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="/tide">潮の満ち引き</a>
+                            <a class="nav-link" href="{{ url_for('tide.tide') }}">潮の満ち引き</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="/astro">天文情報</a>
+                            <a class="nav-link" href="{{ url_for('astro.astro') }}">天文情報</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="/contact">お問い合わせ</a>
+                            <a class="nav-link" href="{{ url_for('admin.contact') }}">お問い合わせ</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="/login">管理画面</a>
+                            <a class="nav-link" href="{{ url_for('admin.login') }}">管理画面</a>
                         </li>
                     </ul>
                 </div>
@@ -63,8 +69,8 @@
     <footer class="text-white text-center py-4">
         <p class="mb-0">&copy; 2026 LunaTide. All Rights Reserved.</p>
         <p class="mb-0">
-            <a href="/privacy" class="text-white text-decoration-none">プライバシーポリシー</a> |
-            <a href="/terms" class="text-white text-decoration-none">利用規約</a>
+            <a href="{{ url_for('main.privacy') }}" class="text-white text-decoration-none">プライバシーポリシー</a> |
+            <a href="{{ url_for('main.terms') }}" class="text-white text-decoration-none">利用規約</a>
         </p>
     </footer>
 
@@ -120,6 +126,15 @@
         window.addEventListener('resize', resize);
         resize();
         animate();
+
+        // PWA Service Worker Registration
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register("{{ url_for('static', filename='sw.js') }}")
+                    .then(reg => console.log('Service Worker registered'))
+                    .catch(err => console.log('Service Worker registration failed', err));
+            });
+        }
     </script>
 </body>
 
