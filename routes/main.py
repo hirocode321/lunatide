@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request
+from flask import Blueprint, render_template, request, make_response, url_for
 from datetime import datetime
 import calendar
 import sqlite3
@@ -111,3 +111,27 @@ def privacy():
 @main_bp.route('/terms')
 def terms():
     return render_template('terms.html')
+
+@main_bp.route('/sitemap.xml')
+def sitemap():
+    # Static pages
+    pages = []
+    # Add static rules
+    for rule in ['main.index', 'main.privacy', 'main.terms', 'astro.astro']:
+        url = url_for(rule, _external=True)
+        pages.append(url)
+
+    # Dynamic pages (Astro Events)
+    conn = sqlite3.connect('inquiries.db')
+    cursor = conn.cursor()
+    events = cursor.execute('SELECT slug FROM astro_events').fetchall()
+    conn.close()
+
+    for event in events:
+        url = url_for('astro.astroinfo', event=event[0], _external=True)
+        pages.append(url)
+
+    sitemap_xml = render_template('sitemap.xml', pages=pages)
+    response = make_response(sitemap_xml)
+    response.headers["Content-Type"] = "application/xml"
+    return response
