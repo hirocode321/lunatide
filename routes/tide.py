@@ -30,6 +30,7 @@ def tide():
         "tide.html",
         pc_code=pc_code,
         today=datetime.now().strftime("%Y-%m-%d"),
+        meta_description="全国の干潮・満潮情報をグラフで確認。現在地から最寄りの港を自動で見つけることも可能です。"
     )
 
 @tide_bp.route("/get_ports/<int:pc>")

@@ -16,4 +16,9 @@ def astroinfo():
     event_data = astro_events.get(event_id)
     if not event_data:
         abort(404)
-    return render_template('astroinfo.html', event=event_data)
+    return render_template(
+        'astroinfo.html', 
+        event=event_data,
+        meta_description=event_data.get('description', ''),
+        meta_title=f"{event_data.get('title')} - LunaTide"
+    )

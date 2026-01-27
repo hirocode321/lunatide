@@ -76,7 +76,8 @@ def index():
         next_year=next_year,
         prev_month=prev_month,
         prev_year=prev_year,
-        events_by_day=events_by_day
+        events_by_day=events_by_day,
+        meta_description=f"{year}年{month}月の月齢カレンダー。今日の月の満ち欠けや、注目の天体イベントをチェックして、夜空を楽しもう。"
     )
 
 @main_bp.route('/privacy')

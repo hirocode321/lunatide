@@ -8,7 +8,7 @@ moon_bp = Blueprint('moon', __name__)
 def moon():
     prefectures = load_prefectures()
     today = get_today()
-    return render_template('moon.html', prefectures=prefectures, today=today)
+    return render_template('moon.html', prefectures=prefectures, today=today, meta_description="各都道府県の月の出、月の入り、月齢を検索。あなただけの夜空のリズムを調べましょう。")
 
 @moon_bp.route('/moon_calendar', methods=['POST'])
 def moon_calendar():
@@ -46,5 +46,6 @@ def moon_calendar():
         prefectures=prefectures,
         prefecture=prefecture,
         selected_date=selected_date,
-        moon_data=moon_data
+        moon_data=moon_data,
+        meta_description=f"{prefecture}の{selected_date}の月の出・月の入り・月齢情報です。"
     )

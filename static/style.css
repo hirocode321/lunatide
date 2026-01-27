@@ -33,6 +33,71 @@ body {
     animation: fadeIn 0.8s ease-out forwards;
 }
 
+/* Moon Simulator Styles */
+.moon-simulator-card {
+    background: linear-gradient(145deg, rgba(15, 12, 41, 0.9), rgba(48, 43, 99, 0.4)) !important;
+    border: 1px solid rgba(0, 210, 255, 0.2) !important;
+    border-radius: 24px;
+}
+
+.moon-display-container {
+    position: relative;
+    display: inline-block;
+}
+
+.simulator-moon-img {
+    width: 200px;
+    height: 200px;
+    position: relative;
+    z-index: 2;
+    filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.2));
+    transition: transform 0.1s ease-out;
+}
+
+.moon-glow {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 220px;
+    height: 220px;
+    background: radial-gradient(circle, rgba(0, 210, 255, 0.2) 0%, transparent 70%);
+    border-radius: 50%;
+    z-index: 1;
+}
+
+/* Custom Range Slider */
+.custom-moon-range {
+    height: 10px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 5px;
+    outline: none;
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+.custom-moon-range::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 24px;
+    height: 24px;
+    background: var(--accent-blue);
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 0 10px var(--accent-blue);
+    border: 2px solid white;
+}
+
+.custom-moon-range::-moz-range-thumb {
+    width: 24px;
+    height: 24px;
+    background: var(--accent-blue);
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 0 10px var(--accent-blue);
+    border: 2px solid white;
+}
+
 /* SNS Brand Colors */
 .btn-x-share {
     background-color: #000000;

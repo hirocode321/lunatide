@@ -25,8 +25,7 @@ def page_not_found(e):
 def internal_server_error(e):
     return render_template('500.html'), 500
 
-"""
+
 if __name__ == '__main__':
     # init_db()
     app.run(port=5555, debug=True)
-"""

@@ -66,6 +66,39 @@
         <span class="me-3"><i class="fas fa-star text-warning me-1"></i> 特別な天体イベント</span>
         <span><i class="far fa-circle me-1"></i> 日付をクリックで詳細を表示（予定）</span>
     </div>
+
+    <hr class="my-5 opacity-25">
+
+    <!-- Moon Simulator Section -->
+    <div class="row justify-content-center mb-5">
+        <div class="col-lg-10">
+            <div class="card bg-dark border-0 shadow-lg overflow-hidden position-relative moon-simulator-card">
+                <div class="card-body p-4 p-md-5 text-center">
+                    <h2 class="h3 mb-4 text-primary"><i class="fas fa-moon me-2"></i>月相シミュレーター</h2>
+                    <p class="text-secondary mb-5">スライダーを動かして、月の満ち欠けを体験しましょう</p>
+
+                    <div class="moon-display-container my-5">
+                        <div class="moon-glow"></div>
+                        <img id="simulator-moon" src="{{ url_for('static', filename='images/moon_15.png') }}"
+                            alt="Simulated Moon" class="img-fluid simulator-moon-img">
+                    </div>
+
+                    <div class="simulator-controls px-md-5">
+                        <div class="d-flex justify-content-between mb-2 small text-secondary font-monospace">
+                            <span>新月 (0)</span>
+                            <span id="current-age-display" class="text-primary h5">月齢: 15.0</span>
+                            <span>満月 (15)</span>
+                        </div>
+                        <input type="range" class="form-range custom-moon-range" id="moon-age-slider" min="0" max="30"
+                            step="0.5" value="15">
+                        <div class="mt-3 small text-muted">
+                            <span id="moon-phase-name">満月の頃</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -74,6 +107,43 @@
         var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
             return new bootstrap.Tooltip(tooltipTriggerEl)
         })
+
+        // Moon Simulator Logic
+        const slider = document.getElementById('moon-age-slider');
+        const moonImg = document.getElementById('simulator-moon');
+        const ageDisplay = document.getElementById('current-age-display');
+        const phaseNameDisplay = document.getElementById('moon-phase-name');
+
+        const phaseNames = [
+            { max: 1.5, name: "新月" },
+            { max: 6.5, name: "三日月" },
+            { max: 8.5, name: "上弦の月" },
+            { max: 13.5, name: "十日余りの月" },
+            { max: 16.5, name: "満月（望）" },
+            { max: 19.5, name: "十六夜月" },
+            { max: 22.5, name: "寝待月" },
+            { max: 24.5, name: "下弦の月" },
+            { max: 28.5, name: "明けの三日月" },
+            { max: 31, name: "新月直前" }
+        ];
+
+        slider.addEventListener('input', function () {
+            const age = parseFloat(this.value);
+            const intAge = Math.floor(age).toString().padStart(2, '0');
+
+            // Update image
+            moonImg.src = `/static/images/moon_${intAge}.png`;
+
+            // Update display
+            ageDisplay.innerText = `月齢: ${age.toFixed(1)}`;
+
+            // Update name
+            const phase = phaseNames.find(p => age < p.max) || phaseNames[0];
+            phaseNameDisplay.innerText = phase.name;
+
+            // Visual effect
+            moonImg.style.transform = `scale(${1 + (age % 0.1)}) rotate(${(age - 15) * 0.5}deg)`;
+        });
     });
 </script>
 {% endblock %}
