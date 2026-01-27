@@ -1,24 +1,36 @@
 from flask import Blueprint, render_template, request, abort
-import json
+import sqlite3
 
 astro_bp = Blueprint('astro', __name__)
 
-with open("data/astro_events.json", "r", encoding="utf-8") as f:
-    astro_events = json.load(f)
-
 @astro_bp.route("/astro")
 def astro():
-    return render_template('astro.html')
+    conn = sqlite3.connect('inquiries.db')
+    conn.row_factory = sqlite3.Row
+    c = conn.cursor()
+    # 2026年のイベントだけ表示するなどフィルタリングが必要ならここで
+    events = c.execute('SELECT * FROM astro_events ORDER BY iso_date').fetchall()
+    conn.close()
+    return render_template('astro.html', events=events)
 
 @astro_bp.route("/astroinfo")
 def astroinfo():
-    event_id = request.args.get('event')
-    event_data = astro_events.get(event_id)
+    slug = request.args.get('event')
+    if not slug:
+        abort(404)
+        
+    conn = sqlite3.connect('inquiries.db')
+    conn.row_factory = sqlite3.Row
+    c = conn.cursor()
+    event_data = c.execute('SELECT * FROM astro_events WHERE slug = ?', (slug,)).fetchone()
+    conn.close()
+    
     if not event_data:
         abort(404)
+        
     return render_template(
         'astroinfo.html', 
         event=event_data,
-        meta_description=event_data.get('description', ''),
-        meta_title=f"{event_data.get('title')} - LunaTide"
+        meta_description=event_data['description'],
+        meta_title=f"{event_data['title']} - LunaTide"
     )

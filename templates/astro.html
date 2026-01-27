@@ -33,108 +33,27 @@
     </div>
 
     <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
-        <!-- 木星の衝 -->
+        {% for event in events %}
         <div class="col">
             <div class="card h-100 border-light shadow-sm text-dark">
                 <div class="card-body d-flex flex-column">
                     <div>
-                        <span class="badge bg-primary mb-2">惑星観測</span>
-                        <h5 class="card-title">1月10日 - 木星の「衝」</h5>
-                        <p class="card-text">太陽系最大の惑星、木星が地球に最接近します。一晩中、非常に明るく輝くため、肉眼でもすぐに見つけられます。</p>
+                        <span class="badge bg-primary mb-2">{{ event.badge }}</span>
+                        <h5 class="card-title">{{ event.title }}</h5>
+                        <p class="card-text">{{ event.description | truncate(60) }}</p>
                     </div>
                     <div class="mt-auto pt-3 text-center">
-                        <a href="{{ url_for('astro.astroinfo', event='jupiter_opposition') }}"
+                        <a href="{{ url_for('astro.astroinfo', event=event.slug) }}"
                             class="btn btn-outline-primary btn-sm px-4">詳しく見る</a>
                     </div>
                 </div>
             </div>
         </div>
-
-        <!-- 惑星パレード -->
-        <div class="col">
-            <div class="card h-100 border-light shadow-sm text-dark">
-                <div class="card-body d-flex flex-column">
-                    <div>
-                        <span class="badge bg-success mb-2">レア現象</span>
-                        <h5 class="card-title">2月28日 - 惑星パレード</h5>
-                        <p class="card-text">日没後の西の空に、6つの惑星が集まります！複数の惑星が一度に並ぶ姿は圧巻。特に金星と木星の輝きが目印です。</p>
-                    </div>
-                    <div class="mt-auto pt-3 text-center">
-                        <a href="{{ url_for('astro.astroinfo', event='planetary_parade') }}"
-                            class="btn btn-outline-primary btn-sm px-4">詳しく見る</a>
-                    </div>
-                </div>
-            </div>
+        {% else %}
+        <div class="col-12">
+            <p class="text-center">現在予定されている天体イベントはありません。</p>
         </div>
-
-        <!-- 皆既月食 -->
-        <div class="col">
-            <div class="card h-100 border-light shadow-sm text-dark">
-                <div class="card-body d-flex flex-column">
-                    <div>
-                        <span class="badge bg-danger mb-2">月食</span>
-                        <h5 class="card-title">3月3日 - 皆既月食</h5>
-                        <p class="card-text">月が完全に地球の影に入る「皆既月食」が見られます。赤銅色に染まる「ブラッドムーン」は必見です。</p>
-                    </div>
-                    <div class="mt-auto pt-3 text-center">
-                        <a href="{{ url_for('astro.astroinfo', event='lunar_eclipse') }}"
-                            class="btn btn-outline-primary btn-sm px-4">詳しく見る</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- ブルームーン -->
-        <div class="col">
-            <div class="card h-100 border-light shadow-sm text-dark">
-                <div class="card-body d-flex flex-column">
-                    <div>
-                        <span class="badge bg-info mb-2">満月</span>
-                        <h5 class="card-title">5月31日 - ブルームーン</h5>
-                        <p class="card-text">2026年5月は満月が2回あります。その2回目がこの「ブルームーン」。願い事をしてみては？</p>
-                    </div>
-                    <div class="mt-auto pt-3 text-center">
-                        <a href="{{ url_for('astro.astroinfo', event='blue_moon') }}"
-                            class="btn btn-outline-primary btn-sm px-4">詳しく見る</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- ペルセウス座流星群 -->
-        <div class="col">
-            <div class="card h-100 border-light shadow-sm text-dark">
-                <div class="card-body d-flex flex-column">
-                    <div>
-                        <span class="badge bg-warning text-dark mb-2">流星群</span>
-                        <h5 class="card-title">8月13日 - ペルセウス座流星群</h5>
-                        <p class="card-text">2026年は新月に近く「最高の条件」です。1時間に数十個の流れ星が期待できます。</p>
-                    </div>
-                    <div class="mt-auto pt-3 text-center">
-                        <a href="{{ url_for('astro.astroinfo', event='perseids') }}"
-                            class="btn btn-outline-primary btn-sm px-4">詳しく見る</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- ふたご座流星群 -->
-        <div class="col">
-            <div class="card h-100 border-light shadow-sm text-dark">
-                <div class="card-body d-flex flex-column">
-                    <div>
-                        <span class="badge bg-warning text-dark mb-2">流星群</span>
-                        <h5 class="card-title">12月14日 - ふたご座流星群</h5>
-                        <p class="card-text">一年で最も多くの流れ星が流れる流星群です。澄んだ冬空に次々と現れる流星をお楽しみください。</p>
-                    </div>
-                    <div class="mt-auto pt-3 text-center">
-                        <a href="{{ url_for('astro.astroinfo', event='geminids') }}"
-                            class="btn btn-outline-primary btn-sm px-4">詳しく見る</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-
+        {% endfor %}
     </div>
 </main>
 

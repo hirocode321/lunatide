@@ -3,7 +3,14 @@
 {% block title %}確認画面{% endblock %}
 
 {% block content %}
-<h1>データベース</h1>
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>データベース（お問い合わせ）</h1>
+    <div>
+        <a href="{{ url_for('admin.astro_list') }}" class="btn btn-success">
+            <i class="fas fa-star me-2"></i>天文イベント管理
+        </a>
+    </div>
+</div>
 {% with messages = get_flashed_messages(with_categories=true) %}
 {% if messages %}
 {% for category, message in messages %}

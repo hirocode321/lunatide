@@ -38,12 +38,18 @@
                 </div>
 
                 <div class="card-body p-4 p-md-5">
-                    <!-- Countdown Timer -->
                     <div id="countdown-card"
                         class="bg-dark text-white p-3 rounded-3 mb-5 text-center d-none border border-primary">
                         <div class="small text-secondary mb-1">イベント開始まであと</div>
                         <div id="timer" class="h3 mb-0 font-monospace text-primary"></div>
                     </div>
+
+                    {% if event.image_url %}
+                    <div class="mb-5 text-center">
+                        <img src="{{ url_for('static', filename=event.image_url) }}" alt="{{ event.title }}"
+                            class="img-fluid rounded-3 shadow">
+                    </div>
+                    {% endif %}
 
                     <div class="mb-5">
                         <h3 class="h4 border-start border-primary border-4 ps-3 mb-3">どんなイベント？</h3>

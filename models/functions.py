@@ -68,12 +68,28 @@ def init_db():
         )
     ''')
 
-    # users テーブル（新規追加）
+    # users テーブル
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             username TEXT NOT NULL UNIQUE,
             password TEXT NOT NULL
+        )
+    ''')
+
+    # astro_events テーブル
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS astro_events (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            slug TEXT UNIQUE,
+            title TEXT NOT NULL,
+            date_text TEXT,
+            description TEXT,
+            details TEXT,
+            tips TEXT,
+            badge TEXT,
+            iso_date TEXT,
+            image_url TEXT
         )
     ''')
 

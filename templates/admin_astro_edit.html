@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+
+{% block title %}{{ 'イベント編集' if event else '新規イベント作成' }}{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('admin.astro_list') }}">天文イベント管理</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{ '編集' if event else '新規作成' }}</li>
+        </ol>
+    </nav>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white py-3">
+                    <h2 class="h4 mb-0">{{ 'イベント編集' if event else '新規イベント作成' }}</h2>
+                </div>
+                <div class="card-body p-4">
+                    <form method="POST" enctype="multipart/form-data">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+                        <div class="mb-3">
+                            <label for="title" class="form-label">タイトル <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="title" name="title"
+                                value="{{ event.title if event else '' }}" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="image" class="form-label">アイキャッチ画像</label>
+                            {% if event and event.image_url %}
+                            <div class="mb-2">
+                                <img src="{{ url_for('static', filename=event.image_url) }}" alt="現在の画像"
+                                    style="max-width: 200px;" class="img-thumbnail">
+                            </div>
+                            {% endif %}
+                            <input type="file" class="form-control" id="image" name="image" accept="image/*">
+                            <div class="form-text">イベントに関連する画像をアップロードできます。</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="slug" class="form-label">スラッグ (URL用ID) <span
+                                    class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="slug" name="slug"
+                                value="{{ event.slug if event else '' }}" required pattern="[a-zA-Z0-9-_]+"
+                                help="半角英数字、ハイフン、アンダースコアのみ使用可能">
+                            <div class="form-text">URLの一部として使用されます (例: jupiter-opposition)。一意である必要があります。</div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="date_text" class="form-label">表示用日付 <span
+                                        class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="date_text" name="date_text"
+                                    value="{{ event.date_text if event else '' }}" required placeholder="例: 1月10日">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="iso_date" class="form-label">ISO日時 (カウントダウン用) <span
+                                        class="text-danger">*</span></label>
+                                <input type="datetime-local" class="form-control" id="iso_date" name="iso_date"
+                                    value="{{ event.iso_date if event else '' }}" required>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="badge" class="form-label">バッジ (カテゴリ) <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="badge" name="badge"
+                                value="{{ event.badge if event else '' }}" required placeholder="例: 惑星観測">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="description" class="form-label">概要 (リード文) <span
+                                    class="text-danger">*</span></label>
+                            <textarea class="form-control" id="description" name="description" rows="3"
+                                required>{{ event.description if event else '' }}</textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="details" class="form-label">詳細内容 <span class="text-danger">*</span></label>
+                            <textarea class="form-control" id="details" name="details" rows="5"
+                                required>{{ event.details if event else '' }}</textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="tips" class="form-label">観測アドバイス <span class="text-danger">*</span></label>
+                            <textarea class="form-control" id="tips" name="tips" rows="3"
+                                required>{{ event.tips if event else '' }}</textarea>
+                        </div>
+
+                        <div class="d-flex justify-content-end gap-2 mt-4">
+                            <a href="{{ url_for('admin.astro_list') }}" class="btn btn-outline-secondary">キャンセル</a>
+                            <button type="submit" class="btn btn-primary">{{ '更新する' if event else '作成する' }}</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

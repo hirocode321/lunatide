@@ -3,8 +3,22 @@ import sqlite3
 import random
 from models.functions import randomname, n
 from werkzeug.security import check_password_hash
+from werkzeug.utils import secure_filename
+import os
 
 admin_bp = Blueprint('admin', __name__)
+
+UPLOAD_FOLDER = 'static/uploads/astro'
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+@admin_bp.route("/admin")
+def admin_index():
+    if session.get('logged_in'):
+        return redirect(url_for('admin.db_show'))
+    return redirect(url_for('admin.login'))
 
 @admin_bp.route("/contact", methods=["GET","POST"])
 def contact():
@@ -122,3 +136,148 @@ def deleting_record(id):
         conn.close()
         flash(f'ID {id} を削除しました。', 'success')
         return redirect(url_for('admin.db_show'))
+
+# Astro Events Management
+@admin_bp.route('/astro_events')
+def astro_list():
+    if not session.get('logged_in'):
+        return redirect(url_for('admin.login'))
+    
+    conn = sqlite3.connect('inquiries.db')
+    conn.row_factory = sqlite3.Row
+    c = conn.cursor()
+    events = c.execute('SELECT * FROM astro_events ORDER BY iso_date').fetchall()
+    conn.close()
+    
+    # CSRF Token generation
+    if 'token' not in session:
+        session['token'] = randomname(n)
+    
+    return render_template('admin_astro_list.html', events=events, csrf_token=session['token'])
+
+@admin_bp.route('/astro_events/add', methods=['GET', 'POST'])
+def astro_add():
+    if not session.get('logged_in'):
+        return redirect(url_for('admin.login'))
+        
+    if request.method == 'POST':
+        # Verify CSRF
+        if request.form.get('csrf_token') != session.get('token'):
+            abort(403)
+            
+        slug = request.form.get('slug')
+        title = request.form.get('title')
+        date_text = request.form.get('date_text')
+        description = request.form.get('description')
+        details = request.form.get('details')
+        tips = request.form.get('tips')
+        badge = request.form.get('badge')
+        iso_date = request.form.get('iso_date')
+        
+        image_url = None
+        if 'image' in request.files:
+            file = request.files['image']
+            if file and allowed_file(file.filename):
+                filename = secure_filename(file.filename)
+                # ファイル名の重複を避けるために一意性を確保するのが望ましいが、簡易的に
+                filename = f"{slug}_{filename}"
+                file.save(os.path.join(UPLOAD_FOLDER, filename))
+                image_url = f"uploads/astro/{filename}"
+        
+        conn = sqlite3.connect('inquiries.db')
+        c = conn.cursor()
+        try:
+            c.execute('''
+                INSERT INTO astro_events (slug, title, date_text, description, details, tips, badge, iso_date, image_url)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ''', (slug, title, date_text, description, details, tips, badge, iso_date, image_url))
+            conn.commit()
+            flash('イベントを作成しました。', 'success')
+            return redirect(url_for('admin.astro_list'))
+        except sqlite3.IntegrityError:
+            flash('エラー: スラッグが既に使用されています。別のスラッグを指定してください。', 'danger')
+        finally:
+            conn.close()
+            
+    if 'token' not in session:
+        session['token'] = randomname(n)
+        
+    return render_template('admin_astro_edit.html', event=None, csrf_token=session['token'])
+
+@admin_bp.route('/astro_events/edit/<int:id>', methods=['GET', 'POST'])
+def astro_edit(id):
+    if not session.get('logged_in'):
+        return redirect(url_for('admin.login'))
+        
+    conn = sqlite3.connect('inquiries.db')
+    conn.row_factory = sqlite3.Row
+    c = conn.cursor()
+    event = c.execute('SELECT * FROM astro_events WHERE id = ?', (id,)).fetchone()
+    
+    if not event:
+        conn.close()
+        flash('イベントが見つかりません。', 'warning')
+        return redirect(url_for('admin.astro_list'))
+        
+    if request.method == 'POST':
+        # Verify CSRF
+        if request.form.get('csrf_token') != session.get('token'):
+            conn.close()
+            abort(403)
+            
+        slug = request.form.get('slug')
+        title = request.form.get('title')
+        date_text = request.form.get('date_text')
+        description = request.form.get('description')
+        details = request.form.get('details')
+        tips = request.form.get('tips')
+        badge = request.form.get('badge')
+        iso_date = request.form.get('iso_date')
+        
+        image_url = event['image_url'] # デフォルトは既存のパス
+        if 'image' in request.files:
+            file = request.files['image']
+            if file and allowed_file(file.filename):
+                filename = secure_filename(file.filename)
+                filename = f"{slug}_{filename}"
+                file.save(os.path.join(UPLOAD_FOLDER, filename))
+                image_url = f"uploads/astro/{filename}"
+        
+        try:
+            c.execute('''
+                UPDATE astro_events 
+                SET slug=?, title=?, date_text=?, description=?, details=?, tips=?, badge=?, iso_date=?, image_url=?
+                WHERE id=?
+            ''', (slug, title, date_text, description, details, tips, badge, iso_date, image_url, id))
+            conn.commit()
+            flash('イベントを更新しました。', 'success')
+            conn.close()
+            return redirect(url_for('admin.astro_list'))
+        except sqlite3.IntegrityError:
+            flash('エラー: スラッグが既に使用されています。別のスラッグを指定してください。', 'danger')
+            conn.close()
+            # リロードせずにフォーム再表示するならここでrender_templateすべきだが、簡易的にredirect
+            return redirect(url_for('admin.astro_edit', id=id))
+
+    conn.close()
+    if 'token' not in session:
+        session['token'] = randomname(n)
+        
+    return render_template('admin_astro_edit.html', event=event, csrf_token=session['token'])
+
+@admin_bp.route('/astro_events/delete/<int:id>', methods=['POST'])
+def astro_delete(id):
+    if not session.get('logged_in'):
+        return redirect(url_for('admin.login'))
+        
+    if request.form.get('csrf_token') != session.get('token'):
+        abort(403)
+        
+    conn = sqlite3.connect('inquiries.db')
+    c = conn.cursor()
+    c.execute('DELETE FROM astro_events WHERE id = ?', (id,))
+    conn.commit()
+    conn.close()
+    
+    flash('イベントを削除しました。', 'success')
+    return redirect(url_for('admin.astro_list'))
