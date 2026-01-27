@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block title %}404 - ページが見つかりません{% endblock %}
+
+{% block content %}
+<div class="container text-center my-5 py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <h1 class="display-1 text-muted mb-4">404</h1>
+            <h2 class="h3 mb-4">お探しのページが見つかりません</h2>
+            <p class="lead mb-5 text-muted">
+                申し訳ありませんが、お探しのページは削除されたか、アドレスが変更された可能性があります。
+            </p>
+            <a href="/" class="btn btn-primary btn-lg px-5 shadow-sm">
+                ホームに戻る
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -54,6 +54,19 @@ def init_db():
             content TEXT NOT NULL
         )
     ''')
+    
+    # moon_data テーブル
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS moon_data (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            prefecture TEXT,
+            month INTEGER,
+            day INTEGER,
+            moon_rise TEXT,
+            moon_set TEXT,
+            moon_age TEXT
+        )
+    ''')
 
     # users テーブル（新規追加）
     cursor.execute('''
@@ -64,8 +77,10 @@ def init_db():
         )
     ''')
 
-    # サンプルデータを挿入（必要に応じて）
+    # サンプルデータを挿入（適切なハッシュ化を行う）
+    from werkzeug.security import generate_password_hash
+    hashed_password = generate_password_hash('password123')
     cursor.execute("INSERT OR IGNORE INTO users (username, password) VALUES (?, ?)",
-                   ('admin', 'password123'))
+                   ('admin', hashed_password))
     conn.commit()
     conn.close()

@@ -6,47 +6,62 @@
 
 <!-- Main Content -->
 <main class="container my-5">
-    <h1 class="text-center mb-4">2025年度 天体イベント</h1>
-    <p class="text-center mb-5">以下は、2025年度の主要な天体イベントです。天体観測を楽しんでください！</p>
+    <h1 class="text-center mb-4">2026年度 天体イベント</h1>
+    <p class="text-center mb-5">2026年は驚きに満ちた天体ショーが目白押しです。注目すべき主要なイベントを詳しく、わかりやすくまとめました。</p>
+
+    <!-- 天体用語の解説（初心者向け） -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="card bg-light border-0 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="fas fa-book-open me-2"></i>もっと楽しく観測するために！天体豆知識</h5>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p class="mb-1"><strong>衝（しょう）:</strong> 太陽・地球・惑星が一直線に並ぶこと。地球に最も近づくため、その惑星が一年で最も大きく、明るく見えます。
+                            </p>
+                            <p class="mb-0"><strong>合（ごう）:</strong> 地球から見て、天体同士が重なったり非常に近くに見えたりすること。美しい共演が楽しめます。</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="mb-1"><strong>極大（きょくだい）:</strong> 流星群の活動が最も活発になること。この前後の夜が一番の観測チャンスです。</p>
+                            <p class="mb-0"><strong>ブルームーン:</strong> ひと月の間に満月が2回ある時の、2回目の満月のこと。「見ると幸せになれる」という言い伝えもあります。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
-        <!-- スーパームーン -->
+        <!-- 木星の衝 -->
         <div class="col">
-            <div class="card border-light shadow-sm">
-                <!-- <img src="https://via.placeholder.com/300" class="card-img-top" alt="スーパームーン"> -->
-                <div class="card-body">
-                    <h5 class="card-title text-center text-dark">2025年1月31日 - スーパームーン</h5>
-                    <p class="card-text">この日はスーパームーンが観測できます。月が通常よりも大きく、明るく見えるので、お見逃しなく！</p>
-                    <div class="text-center">
-                        <a href="/info" class="btn btn-outline-primary">詳しく見る</a>
+            <div class="card h-100 border-light shadow-sm">
+                <div class="card-body d-flex flex-column">
+                    <div>
+                        <span class="badge bg-primary mb-2">惑星観測</span>
+                        <h5 class="card-title">1月10日 - 木星の「衝」</h5>
+                        <p class="card-text">太陽系最大の惑星、木星が地球に最接近します。一晩中、非常に明るく輝くため、肉眼でもすぐに見つけられます。</p>
+                    </div>
+                    <div class="mt-auto pt-3 text-center">
+                        <a href="/astroinfo?event=jupiter_opposition"
+                            class="btn btn-outline-primary btn-sm px-4">詳しく見る</a>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- ペルセウス座流星群 -->
+        <!-- 惑星パレード -->
         <div class="col">
-            <div class="card border-light shadow-sm">
-                <!-- <img src="https://via.placeholder.com/300" class="card-img-top" alt="ペルセウス座流星群"> -->
-                <div class="card-body">
-                    <h5 class="card-title text-center text-dark">2025年5月6日 - ペルセウス座流星群</h5>
-                    <p class="card-text">毎年恒例のペルセウス座流星群が見頃を迎えます。特に夜間に多くの流れ星を観察できるチャンスです。</p>
-                    <div class="text-center">
-                        <a href="/info" class="btn btn-outline-primary">詳しく見る</a>
+            <div class="card h-100 border-light shadow-sm">
+                <div class="card-body d-flex flex-column">
+                    <div>
+                        <span class="badge bg-success mb-2">レア現象</span>
+                        <h5 class="card-title">2月28日 - 惑星パレード</h5>
+                        <p class="card-text">日没後の西の空に、6つの惑星が集まります！複数の惑星が一度に並ぶ姿は圧巻。特に金星と木星の輝きが目印です。</p>
                     </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- 金環日食 -->
-        <div class="col">
-            <div class="card border-light shadow-sm">
-                <!-- <img src="https://via.placeholder.com/300" class="card-img-top" alt="金環日食"> -->
-                <div class="card-body">
-                    <h5 class="card-title text-center text-dark">2025年10月14日 - 金環日食</h5>
-                    <p class="card-text">2025年10月14日に金環日食が観測されます。日食の瞬間は貴重な体験となりますので、特別な準備をして観察しましょう。</p>
-                    <div class="text-center">
-                        <a href="/info" class="btn btn-outline-primary">詳しく見る</a>
+                    <div class="mt-auto pt-3 text-center">
+                        <a href="/astroinfo?event=planetary_parade"
+                            class="btn btn-outline-primary btn-sm px-4">詳しく見る</a>
                     </div>
                 </div>
             </div>
@@ -54,41 +69,63 @@
 
         <!-- 皆既月食 -->
         <div class="col">
-            <div class="card border-light shadow-sm">
-                <!-- <img src="https://via.placeholder.com/300" class="card-img-top" alt="皆既月食"> -->
-                <div class="card-body">
-                    <h5 class="card-title text-center text-dark">2025年12月4日 - 皆既月食</h5>
-                    <p class="card-text">12月4日には皆既月食が観測されます。月が完全に地球の影に入るため、幻想的な景色が広がります。</p>
-                    <div class="text-center">
-                        <a href="/info" class="btn btn-outline-primary">詳しく見る</a>
+            <div class="card h-100 border-light shadow-sm">
+                <div class="card-body d-flex flex-column">
+                    <div>
+                        <span class="badge bg-danger mb-2">月食</span>
+                        <h5 class="card-title">3月3日 - 皆既月食</h5>
+                        <p class="card-text">月が完全に地球の影に入る「皆既月食」が見られます。赤銅色に染まる「ブラッドムーン」は必見です。</p>
+                    </div>
+                    <div class="mt-auto pt-3 text-center">
+                        <a href="/astroinfo?event=lunar_eclipse" class="btn btn-outline-primary btn-sm px-4">詳しく見る</a>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- 土星の大接近 -->
+        <!-- ブルームーン -->
         <div class="col">
-            <div class="card border-light shadow-sm">
-                <!-- <img src="https://via.placeholder.com/300" class="card-img-top" alt="土星の大接近"> -->
-                <div class="card-body">
-                    <h5 class="card-title text-center text-dark">2025年8月20日 - 土星の大接近</h5>
-                    <p class="card-text">土星が地球に最接近します。大きな環を持つ土星を肉眼で観察する良いチャンスです。天体望遠鏡を使うと、より鮮明に見ることができます。</p>
-                    <div class="text-center">
-                        <a href="/info" class="btn btn-outline-primary">詳しく見る</a>
+            <div class="card h-100 border-light shadow-sm">
+                <div class="card-body d-flex flex-column">
+                    <div>
+                        <span class="badge bg-info mb-2">満月</span>
+                        <h5 class="card-title">5月31日 - ブルームーン</h5>
+                        <p class="card-text">2026年5月は満月が2回あります。その2回目がこの「ブルームーン」。願い事をしてみては？</p>
+                    </div>
+                    <div class="mt-auto pt-3 text-center">
+                        <a href="/astroinfo?event=blue_moon" class="btn btn-outline-primary btn-sm px-4">詳しく見る</a>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- しし座流星群 -->
+        <!-- ペルセウス座流星群 -->
         <div class="col">
-            <div class="card border-light shadow-sm">
-                <!-- <img src="https://via.placeholder.com/300" class="card-img-top" alt="しし座流星群"> -->
-                <div class="card-body">
-                    <h5 class="card-title text-center text-dark">2025年11月17日 - しし座流星群</h5>
-                    <p class="card-text">しし座流星群は毎年11月に活発になります。流れ星の数が多く、観察には絶好のチャンスです。特に夜間に注目しましょう。</p>
-                    <div class="text-center">
-                        <a href="/info" class="btn btn-outline-primary">詳しく見る</a>
+            <div class="card h-100 border-light shadow-sm">
+                <div class="card-body d-flex flex-column">
+                    <div>
+                        <span class="badge bg-warning text-dark mb-2">流星群</span>
+                        <h5 class="card-title">8月13日 - ペルセウス座流星群</h5>
+                        <p class="card-text">2026年は新月に近く「最高の条件」です。1時間に数十個の流れ星が期待できます。</p>
+                    </div>
+                    <div class="mt-auto pt-3 text-center">
+                        <a href="/astroinfo?event=perseids" class="btn btn-outline-primary btn-sm px-4">詳しく見る</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ふたご座流星群 -->
+        <div class="col">
+            <div class="card h-100 border-light shadow-sm">
+                <div class="card-body d-flex flex-column">
+                    <div>
+                        <span class="badge bg-warning text-dark mb-2">流星群</span>
+                        <h5 class="card-title">12月14日 - ふたご座流星群</h5>
+                        <p class="card-text">一年で最も多くの流れ星が流れる流星群です。澄んだ冬空に次々と現れる流星をお楽しみください。</p>
+                    </div>
+                    <div class="mt-auto pt-3 text-center">
+                        <a href="/astroinfo?event=geminids" class="btn btn-outline-primary btn-sm px-4">詳しく見る</a>
                     </div>
                 </div>
             </div>
