@@ -97,17 +97,22 @@ body {
 }
 
 .card-title {
-    /* color: var(--text-primary); */
     color: white !important;
+    /* デフォルトは白 */
 }
 
-.text-dark {
-    color: #212529 !important;
+/* 明るい背景（text-dark/bg-light）がある場合は黒くする */
+.text-dark .card-title,
+.bg-light .card-title,
+.text-dark h3,
+.text-dark h5 {
+    color: #212529;
 }
 
 .card-text {
     color: var(--text-secondary);
 }
+
 
 .btn-outline-primary {
     color: var(--accent-blue);
