@@ -2,8 +2,42 @@
 
 {% block title %}{{ 'イベント編集' if event else '新規イベント作成' }}{% endblock %}
 
+{% block scripts %}
+<!-- Quill JS -->
+<script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var quill = new Quill('#editor-container', {
+            theme: 'snow',
+            modules: {
+                toolbar: [
+                    [{ 'header': [1, 2, 3, false] }],
+                    ['bold', 'italic', 'underline', 'strike'],
+                    [{ 'color': [] }, { 'background': [] }],
+                    [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+                    ['link', 'clean']
+                ]
+            }
+        });
+
+        // Load initial content
+        var initialContent = document.getElementById('details').value;
+        quill.clipboard.dangerouslyPasteHTML(initialContent);
+
+        // Sync content on form submit
+        var form = document.querySelector('form');
+        form.onsubmit = function () {
+            var content = document.querySelector('input[name=details]');
+            content.value = quill.root.innerHTML;
+        };
+    });
+</script>
+{% endblock %}
+
 {% block content %}
 <div class="container my-5">
+    <!-- Quill CSS -->
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
     <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="{{ url_for('admin.astro_list') }}">天文イベント管理</a></li>
@@ -78,14 +112,26 @@
 
                         <div class="mb-3">
                             <label for="details" class="form-label">詳細内容 <span class="text-danger">*</span></label>
-                            <textarea class="form-control" id="details" name="details" rows="5"
-                                required>{{ event.details if event else '' }}</textarea>
+                            <!-- Hidden input to store the actual HTML content -->
+                            <input type="hidden" name="details" id="details"
+                                value="{{ event.details if event else '' }}">
+                            <!-- Quill Editor Container -->
+                            <div id="editor-container" style="height: 300px; background: white;"></div>
                         </div>
 
                         <div class="mb-3">
                             <label for="tips" class="form-label">観測アドバイス <span class="text-danger">*</span></label>
                             <textarea class="form-control" id="tips" name="tips" rows="3"
                                 required>{{ event.tips if event else '' }}</textarea>
+                        </div>
+
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="is_important" name="is_important" {% if
+                                event and event.is_important %}checked{% endif %}>
+                            <label class="form-check-label fw-bold text-warning" for="is_important">
+                                <i class="fas fa-star border-white"></i> カレンダーで強調表示する
+                            </label>
+                            <div class="form-text">トップページの月齢カレンダーで、この日が目立つようになります。</div>
                         </div>
 
                         <div class="d-flex justify-content-end gap-2 mt-4">

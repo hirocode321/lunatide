@@ -89,7 +89,8 @@ def init_db():
             tips TEXT,
             badge TEXT,
             iso_date TEXT,
-            image_url TEXT
+            image_url TEXT,
+            is_important BOOLEAN DEFAULT 0
         )
     ''')
 

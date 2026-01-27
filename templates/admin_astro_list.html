@@ -34,6 +34,7 @@
                             <th>日付</th>
                             <th>バッジ</th>
                             <th>スラッグ</th>
+                            <th class="text-center">SNS共有</th>
                             <th class="text-end pe-4">操作</th>
                         </tr>
                     </thead>
@@ -44,6 +45,13 @@
                             <td>{{ event.date_text }}</td>
                             <td><span class="badge bg-secondary">{{ event.badge }}</span></td>
                             <td class="text-muted small">{{ event.slug }}</td>
+                            <td class="text-center">
+                                <button class="btn btn-sm btn-outline-info copy-btn"
+                                    data-text="【LunaTide】{{ event.title }} - {{ event.date_text }} #宇宙 #天体観測"
+                                    onclick="copyToClipboard(this)">
+                                    <i class="fas fa-copy"></i>
+                                </button>
+                            </td>
                             <td class="text-end pe-4">
                                 <a href="{{ url_for('admin.astro_edit', id=event.id) }}"
                                     class="btn btn-sm btn-outline-primary me-2">
@@ -69,4 +77,23 @@
         </div>
     </div>
 </div>
+
+<script>
+    function copyToClipboard(button) {
+        const text = button.getAttribute('data-text');
+        navigator.clipboard.writeText(text).then(function () {
+            const originalHtml = button.innerHTML;
+            button.innerHTML = '<i class="fas fa-check"></i>';
+            button.classList.remove('btn-outline-info');
+            button.classList.add('btn-success');
+            setTimeout(() => {
+                button.innerHTML = originalHtml;
+                button.classList.remove('btn-success');
+                button.classList.add('btn-outline-info');
+            }, 2000);
+        }, function (err) {
+            alert('コピーに失敗しました');
+        });
+    }
+</script>
 {% endblock %}

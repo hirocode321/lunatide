@@ -45,8 +45,11 @@ def index():
 
     # 天文イベントの読み込み(2026年専用)
     import json
-    with open("data/astro_events.json", "r", encoding="utf-8") as f:
-        all_astro_events = json.load(f)
+
+    # with open("data/astro_events.json", "r", encoding="utf-8") as f:
+    #     all_astro_events = json.load(f)
+    # JSON読み込みは無効化し、DBのみ使用する方針へ完全に切り替えます
+    all_astro_events = {}
     
     events_by_day = {}
     for ev_id, info in all_astro_events.items():
@@ -57,7 +60,28 @@ def index():
                 "id": ev_id,
                 "title": info["title"],
                 "badge": info["badge"]
+                # JSON data doesn't have is_important yet, so default to False
             }
+
+    # データベースからのイベント読み込み (merged with existing or replacing JSON)
+    # JSONとDBの両方を使う今の構造は少し複雑ですが、DB優先にします
+    conn = sqlite3.connect('inquiries.db')
+    conn.row_factory = sqlite3.Row
+    c = conn.cursor()
+    # 月でフィルタリング（iso_dateは文字列比較できる）
+    start_date = f"{year}-{month:02d}-01"
+    end_date = f"{year}-{month:02d}-31"
+    db_events = c.execute("SELECT * FROM astro_events WHERE iso_date BETWEEN ? AND ?", (start_date, end_date)).fetchall()
+    conn.close()
+
+    for event in db_events:
+        d = datetime.fromisoformat(event['iso_date']).day
+        events_by_day[d] = {
+            "id": event['slug'], # slugをidとして使う
+            "title": event['title'],
+            "badge": event['badge'],
+            "is_important": event['is_important']
+        }
 
     next_month = month + 1 if month < 12 else 1
     next_year = year if month < 12 else year + 1

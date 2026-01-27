@@ -174,6 +174,11 @@ def astro_add():
         badge = request.form.get('badge')
         iso_date = request.form.get('iso_date')
         
+        badge = request.form.get('badge')
+        iso_date = request.form.get('iso_date')
+        # Checkbox is 'on' if checked, None otherwise
+        is_important = 1 if request.form.get('is_important') else 0
+        
         image_url = None
         if 'image' in request.files:
             file = request.files['image']
@@ -188,9 +193,9 @@ def astro_add():
         c = conn.cursor()
         try:
             c.execute('''
-                INSERT INTO astro_events (slug, title, date_text, description, details, tips, badge, iso_date, image_url)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ''', (slug, title, date_text, description, details, tips, badge, iso_date, image_url))
+                INSERT INTO astro_events (slug, title, date_text, description, details, tips, badge, iso_date, image_url, is_important)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ''', (slug, title, date_text, description, details, tips, badge, iso_date, image_url, is_important))
             conn.commit()
             flash('イベントを作成しました。', 'success')
             return redirect(url_for('admin.astro_list'))
@@ -234,6 +239,10 @@ def astro_edit(id):
         badge = request.form.get('badge')
         iso_date = request.form.get('iso_date')
         
+        badge = request.form.get('badge')
+        iso_date = request.form.get('iso_date')
+        is_important = 1 if request.form.get('is_important') else 0
+        
         image_url = event['image_url'] # デフォルトは既存のパス
         if 'image' in request.files:
             file = request.files['image']
@@ -246,9 +255,9 @@ def astro_edit(id):
         try:
             c.execute('''
                 UPDATE astro_events 
-                SET slug=?, title=?, date_text=?, description=?, details=?, tips=?, badge=?, iso_date=?, image_url=?
+                SET slug=?, title=?, date_text=?, description=?, details=?, tips=?, badge=?, iso_date=?, image_url=?, is_important=?
                 WHERE id=?
-            ''', (slug, title, date_text, description, details, tips, badge, iso_date, image_url, id))
+            ''', (slug, title, date_text, description, details, tips, badge, iso_date, image_url, is_important, id))
             conn.commit()
             flash('イベントを更新しました。', 'success')
             conn.close()

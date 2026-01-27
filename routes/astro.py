@@ -5,13 +5,22 @@ astro_bp = Blueprint('astro', __name__)
 
 @astro_bp.route("/astro")
 def astro():
+    category = request.args.get('category')
+    
     conn = sqlite3.connect('inquiries.db')
     conn.row_factory = sqlite3.Row
     c = conn.cursor()
-    # 2026年のイベントだけ表示するなどフィルタリングが必要ならここで
-    events = c.execute('SELECT * FROM astro_events ORDER BY iso_date').fetchall()
+    
+    if category:
+        events = c.execute('SELECT * FROM astro_events WHERE badge = ? ORDER BY iso_date', (category,)).fetchall()
+    else:
+        events = c.execute('SELECT * FROM astro_events ORDER BY iso_date').fetchall()
+        
+    # Get unique badges for filter buttons
+    badges = [row[0] for row in c.execute('SELECT DISTINCT badge FROM astro_events').fetchall()]
+    
     conn.close()
-    return render_template('astro.html', events=events)
+    return render_template('astro.html', events=events, badges=badges, current_category=category)
 
 @astro_bp.route("/astroinfo")
 def astroinfo():

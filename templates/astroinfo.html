@@ -54,7 +54,7 @@
                     <div class="mb-5">
                         <h3 class="h4 border-start border-primary border-4 ps-3 mb-3">どんなイベント？</h3>
                         <p class="lead">{{ event.description }}</p>
-                        <p>{{ event.details }}</p>
+                        <div>{{ event.details | safe }}</div>
                     </div>
 
                     <div class="bg-light p-4 rounded-3 mb-5 text-dark">
