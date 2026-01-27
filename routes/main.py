@@ -43,6 +43,22 @@ def index():
             moon_ages.append(None)
             moon_images.append(None)
 
+    # 天文イベントの読み込み(2026年専用)
+    import json
+    with open("data/astro_events.json", "r", encoding="utf-8") as f:
+        all_astro_events = json.load(f)
+    
+    events_by_day = {}
+    for ev_id, info in all_astro_events.items():
+        # ISO形式 "2026-01-10T00:00:00"
+        ev_date = datetime.fromisoformat(info["iso_date"])
+        if ev_date.year == year and ev_date.month == month:
+            events_by_day[ev_date.day] = {
+                "id": ev_id,
+                "title": info["title"],
+                "badge": info["badge"]
+            }
+
     next_month = month + 1 if month < 12 else 1
     next_year = year if month < 12 else year + 1
     prev_month = month - 1 if month > 1 else 12
@@ -59,7 +75,8 @@ def index():
         next_month=next_month,
         next_year=next_year,
         prev_month=prev_month,
-        prev_year=prev_year
+        prev_year=prev_year,
+        events_by_day=events_by_day
     )
 
 @main_bp.route('/privacy')

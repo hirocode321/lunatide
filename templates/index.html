@@ -3,79 +3,77 @@
 {% block title %}月齢カレンダー{% endblock %}
 
 {% block content %}
-<div class="container my-4">
-    <div class="text-center">
-        <h1>{{ year }}年{{ month }}月の月齢カレンダー</h1>
+<div class="container my-5 calendar-container fade-in">
+    <div class="text-center mb-5">
+        <h1 class="display-5 font-weight-bold">{{ year }}年{{ month }}月</h1>
+        <p class="text-secondary">月齢と星々が織りなす、今月のリズム</p>
     </div>
 
-    <div class="d-flex justify-content-center my-4">
-        <a href="{{ url_for('main.index', year=prev_year, month=prev_month) }}" class="btn btn-primary mx-2">前月</a>
-        <a href="{{ url_for('main.index', year=next_year, month=next_month) }}" class="btn btn-primary mx-2">次月</a>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <a href="{{ url_for('main.index', year=prev_year, month=prev_month) }}" class="btn btn-outline-light px-4">
+            <i class="fas fa-chevron-left me-2"></i>前月
+        </a>
+        <div class="h4 mb-0 text-primary font-monospace">{{ year }}.{{ month }}</div>
+        <a href="{{ url_for('main.index', year=next_year, month=next_month) }}" class="btn btn-outline-light px-4">
+            次月<i class="fas fa-chevron-right ms-2"></i>
+        </a>
     </div>
 
-    <!-- レスポンシブ対応 -->
-    <div class="table-responsive">
-        <table class="table table-bordered table-striped">
-            <thead>
-                <tr>
-                    <th class="text-center bg-danger bg-opacity-85 text-white">日</th>
-                    <th class="text-center">月</th>
-                    <th class="text-center">火</th>
-                    <th class="text-center">水</th>
-                    <th class="text-center">木</th>
-                    <th class="text-center">金</th>
-                    <th class="text-center bg-primary bg-opacity-85 text-white">土</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    {% for day, weekday in days %}
-                    {% if loop.index0 % 7 == 0 and not loop.first %}
-                </tr>
-                <tr>
-                    {% endif %}
-                    <td class="
-                            {% if day > 0 %}
-                                {% if year == today.year and month == today.month and day == today.day %}
-                                    bg-warning
-                                {% elif moon_images[loop.index0] %}
-                                    {% if weekday == 6 %}bg-primary bg-opacity-75 text-white{% elif weekday == 0 %}bg-danger bg-opacity-75 text-white{% endif %}
-                                {% endif %}
-                            {% endif %}
-                        ">
-                        {% if day > 0 %}
-                        <div class="text-center">{{ day }}</div>
-                        {% if moon_images[loop.index0] %}
-                        <div class="text-center mt-2">
-                            <img src="{{ url_for('static', filename=moon_images[loop.index0]) }}" alt="月齢画像"
-                                class="img-fluid" style="width: 30px; height: 30px;" />
-                            <br>
-                            <p><span class="moon-label">月齢:</span> {{ moon_ages[loop.index0] }}</p>
-                        </div>
-                        {% else %}
-                        <div class="text-center mt-2">
-                            <img src="{{ url_for('static', filename='images/placeholder.png') }}" alt="月齢画像"
-                                class="img-fluid" style="width: 30px; height: 30px;" />
-                            <br>
-                            <p><span class="moon-label">月齢:</span> -</p>
-                        </div>
-                        {% endif %}
-                        {% endif %}
-                    </td>
-                    {% endfor %}
-                </tr>
-            </tbody>
-        </table>
+    <div class="calendar-grid">
+        <!-- Weekday Headers -->
+        <div class="calendar-header text-danger">SUN</div>
+        <div class="calendar-header">MON</div>
+        <div class="calendar-header">TUE</div>
+        <div class="calendar-header">WED</div>
+        <div class="calendar-header">THU</div>
+        <div class="calendar-header">FRI</div>
+        <div class="calendar-header text-primary">SAT</div>
+
+        {% for day, weekday in days %}
+        {% if day > 0 %}
+        <div class="calendar-day 
+                {% if year == today.year and month == today.month and day == today.day %}day-today{% endif %}
+                {% if weekday == 0 %}text-danger{% elif weekday == 6 %}text-primary{% endif %}"
+            data-bs-toggle="tooltip" data-bs-placement="top"
+            title="{% if day in events_by_day %}{{ events_by_day[day].title }}{% else %}月齢: {{ moon_ages[loop.index0] or '-' }}{% endif %}">
+
+            <div class="day-number">{{ day }}</div>
+
+            <div class="moon-info">
+                {% if moon_images[loop.index0] %}
+                <img src="{{ url_for('static', filename=moon_images[loop.index0]) }}" alt="Moon Phase"
+                    class="moon-img-sm">
+                <div class="moon-age-text d-none d-md-block">{{ moon_ages[loop.index0] }}</div>
+                {% else %}
+                <div style="height: 32px;"></div>
+                {% endif %}
+            </div>
+
+            {% if day in events_by_day %}
+            <div class="event-marker">
+                <i class="fas fa-star"></i>
+            </div>
+            {% endif %}
+        </div>
+        {% else %}
+        <div class="calendar-day opacity-25" style="background: transparent; border: none;"></div>
+        {% endif %}
+        {% endfor %}
     </div>
 
-    <!-- スマホサイズで月齢の文字部分だけを非表示にするためのCSS -->
-    <style>
-        @media (max-width: 768px) {
-            .moon-label {
-                display: none;
-            }
-        }
-    </style>
-
+    <!-- Instructions / Legend -->
+    <div class="mt-5 text-center small text-secondary">
+        <span class="me-3"><i class="fas fa-star text-warning me-1"></i> 特別な天体イベント</span>
+        <span><i class="far fa-circle me-1"></i> 日付をクリックで詳細を表示（予定）</span>
+    </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl)
+        })
+    });
+</script>
 {% endblock %}
