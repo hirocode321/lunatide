@@ -7,3 +7,10 @@ __pycache__/
 
 # (任意) uvのキャッシュ
 .uv/
+
+# 例：Pythonの仮想環境の場合
+.venv/
+venv/
+
+# 例：Node.jsの場合
+node_modules/
