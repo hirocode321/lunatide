@@ -24,13 +24,17 @@
                         <div class="text-end">
                             <!-- SNS Share Buttons -->
                             <div class="d-flex gap-2">
+                                <button id="web-share-btn"
+                                    class="btn btn-outline-light btn-sm px-3 rounded-pill shadow-sm d-none">
+                                    <i class="fas fa-share-alt me-1"></i> <span class="d-none d-sm-inline">シェア</span>
+                                </button>
                                 <a href="https://x.com/intent/tweet?text={{ (event.title ~ ' | ' ~ event.date ~ ' に注目！') | urlencode }}&url={{ request.url | urlencode }}"
                                     target="_blank" class="btn btn-x-share btn-sm px-3 rounded-pill shadow-sm">
-                                    <i class="fab fa-x-twitter me-1"></i> <span class="d-none d-sm-inline">Xでシェア</span>
+                                    <i class="fab fa-x-twitter me-1"></i> <span class="d-none d-sm-inline">X</span>
                                 </a>
                                 <a href="https://social-plugins.line.me/lineit/share?url={{ (event.title ~ ' | ' ~ event.date ~ ' | ' ~ request.url) | urlencode }}"
                                     target="_blank" class="btn btn-line-share btn-sm px-3 rounded-pill shadow-sm">
-                                    <i class="fab fa-line me-1"></i> <span class="d-none d-sm-inline">LINEで送る</span>
+                                    <i class="fab fa-line me-1"></i> <span class="d-none d-sm-inline">LINE</span>
                                 </a>
                             </div>
                         </div>
@@ -51,10 +55,63 @@
                     </div>
                     {% endif %}
 
+
+                    <!-- Viewing Conditions Grid -->
+                    {% if event.direction or event.time_range or event.altitude %}
+                    <div class="row row-cols-2 row-cols-md-4 g-3 mb-5 text-center">
+                        <div class="col">
+                            <div class="p-3 border rounded-3 h-100 table-light">
+                                <div class="text-secondary mb-1"><i class="far fa-compass me-1"></i>方角</div>
+                                <div class="fw-bold">{{ event.direction or '不明' }}</div>
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div class="p-3 border rounded-3 h-100 table-light">
+                                <div class="text-secondary mb-1"><i class="far fa-clock me-1"></i>時間帯</div>
+                                <div class="fw-bold">{{ event.time_range or '一晩中' }}</div>
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div class="p-3 border rounded-3 h-100 table-light">
+                                <div class="text-secondary mb-1"><i class="fas fa-arrows-alt-v me-1"></i>高度</div>
+                                <div class="fw-bold">{{ event.altitude or '不明' }}</div>
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div class="p-3 border rounded-3 h-100 table-light">
+                                <div class="text-secondary mb-1"><i class="far fa-eye me-1"></i>観測モード</div>
+                                <div class="fw-bold">
+                                    {% if event.viewing_mode == 'binoculars' %}
+                                    <i class="fas fa-binoculars text-primary"></i> 双眼鏡
+                                    {% else %}
+                                    <i class="far fa-eye text-primary"></i> 肉眼
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Visibility Score -->
+                    {% if event.visibility_score %}
+                    <div
+                        class="mb-5 p-3 bg-dark text-white rounded-3 d-flex align-items-center justify-content-between">
+                        <div>
+                            <h5 class="mb-0">今日の観測しやすさ</h5>
+                            <small class="text-secondary">天候や月齢を考慮した目安です</small>
+                        </div>
+                        <div class="h4 mb-0 text-warning">
+                            {% for i in range(event.visibility_score) %}<i class="fas fa-star"></i>{% endfor %}
+                            {% for i in range(5 - event.visibility_score) %}<i class="far fa-star opacity-50"></i>{%
+                            endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+
                     <div class="mb-5">
                         <h3 class="h4 border-start border-primary border-4 ps-3 mb-3">どんなイベント？</h3>
-                        <p class="lead">{{ event.description }}</p>
-                        <div>{{ event.details | safe }}</div>
+                        <div id="event-description" class="lead">{{ event.description }}</div>
+                        <div id="event-details" class="mt-3">{{ event.details | safe }}</div>
                     </div>
 
                     <div class="bg-light p-4 rounded-3 mb-5 text-dark">
@@ -82,6 +139,18 @@
     </div>
 </main>
 
+<style>
+    .glossary-term {
+        border-bottom: 1px dashed #0d6efd;
+        cursor: help;
+        color: #0d6efd;
+    }
+
+    .glossary-term:hover {
+        background-color: rgba(13, 110, 253, 0.1);
+    }
+</style>
+
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const targetDate = new Date("{{ event.iso_date }}").getTime();
@@ -93,22 +162,81 @@
             const distance = targetDate - now;
 
             if (distance < 0) {
-                countdownCard.classList.add('d-none');
+                if (countdownCard) countdownCard.classList.add('d-none');
                 return;
             }
 
-            countdownCard.classList.remove('d-none');
+            if (countdownCard) countdownCard.classList.remove('d-none');
 
             const days = Math.floor(distance / (1000 * 60 * 60 * 24));
             const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
             const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
             const seconds = Math.floor((distance % (1000 * 60)) / 1000);
 
-            timerElement.innerHTML = `${days}日 ${hours}時間 ${minutes}分 ${seconds}秒`;
+            if (timerElement) timerElement.innerHTML = `${days}日 ${hours}時間 ${minutes}分 ${seconds}秒`;
         }
 
         updateTimer();
         setInterval(updateTimer, 1000);
+
+        // Glossary Logic
+        const glossary = {
+            "衝": "太陽・地球・惑星が一直線に並ぶ現象。惑星が一年で最も明るく、大きく見えます。",
+            "合": "2つの天体（月と惑星など）が空の中で急接近して見える現象。",
+            "極大": "流星群の活動がピークを迎え、流れ星が最も多く流れる時期。",
+            "食": "ある天体が別の天体の後ろに隠されたり、影に入ったりすること（日食、月食、星食など）。",
+            "内合": "水星や金星が地球と太陽の間にくること。",
+            "外合": "水星や金星が太陽の裏側にくること。",
+            "留": "惑星の公転に伴い、地球から見て天球上の動きが一時的に止まって見えること。",
+            "最大離角": "水星や金星が太陽から最も離れて見えるとき。観測の好機。",
+            "地球照": "地球に反射した太陽光が月の影の部分をうっすら照らす現象。「新月」や「三日月」の頃に見やすい。",
+            "ブルームーン": "1ヶ月に満月が2回ある場合の2回目の満月。"
+        };
+
+        function highlightTerms(elementId) {
+            const el = document.getElementById(elementId);
+            if (!el) return;
+            let html = el.innerHTML;
+
+            // Sort keys by length desc to avoid replacing substrings of longer terms
+            const keys = Object.keys(glossary).sort((a, b) => b.length - a.length);
+
+            keys.forEach(term => {
+                const regex = new RegExp(term, 'g');
+                // Prevent replacing inside existing tags
+                // This is a simple regex replace, might be fragile with existing HTML tags but sufficient for plain descriptions
+                // To be safer, we would traverse text nodes. For now, simple replace.
+                // Using a negative lookahead to avoid re-replacing inside tags (simple check)
+                html = html.replace(regex, `<span class="glossary-term" data-bs-toggle="popover" title="${term}" data-bs-content="${glossary[term]}" data-bs-trigger="hover focus" tabindex="0">${term}</span>`);
+            });
+            el.innerHTML = html;
+        }
+
+        highlightTerms('event-description');
+        highlightTerms('event-details');
+
+        // Initialize Popovers
+        var popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'))
+        var popoverList = popoverTriggerList.map(function (popoverTriggerEl) {
+            return new bootstrap.Popover(popoverTriggerEl)
+        });
+
+        // Web Share API
+        const shareBtn = document.getElementById('web-share-btn');
+        if (navigator.share) {
+            shareBtn.classList.remove('d-none');
+            shareBtn.addEventListener('click', async () => {
+                try {
+                    await navigator.share({
+                        title: '{{ event.title }} - LunaTide',
+                        text: '{{ event.title }} | {{ event.date }} に注目！ #LunaTide',
+                        url: window.location.href,
+                    });
+                } catch (err) {
+                    console.log('Error sharing:', err);
+                }
+            });
+        }
     });
 </script>
 {% endblock %}

@@ -59,47 +59,69 @@ def index():
             moon_images.append(None)
             moon_names.append(None)
 
-    # 天文イベントの読み込み(2026年専用)
-    import json
-
-    # with open("data/astro_events.json", "r", encoding="utf-8") as f:
-    #     all_astro_events = json.load(f)
-    # JSON読み込みは無効化し、DBのみ使用する方針へ完全に切り替えます
-    all_astro_events = {}
-    
-    events_by_day = {}
-    for ev_id, info in all_astro_events.items():
-        # ISO形式 "2026-01-10T00:00:00"
-        ev_date = datetime.fromisoformat(info["iso_date"])
-        if ev_date.year == year and ev_date.month == month:
-            events_by_day[ev_date.day] = {
-                "id": ev_id,
-                "title": info["title"],
-                "badge": info["badge"]
-                # JSON data doesn't have is_important yet, so default to False
-            }
-
-    # データベースからのイベント読み込み (merged with existing or replacing JSON)
-    # JSONとDBの両方を使う今の構造は少し複雑ですが、DB優先にします
+    # 天文イベントの読み込み
     from database import get_moon_db
     conn = get_moon_db()
-    # conn.row_factory = sqlite3.Row # Already set
     c = conn.cursor()
-    # 月でフィルタリング（iso_dateは文字列比較できる）
+    
+    # 月でフィルタリング
     start_date = f"{year}-{month:02d}-01"
     end_date = f"{year}-{month:02d}-31"
     db_events = c.execute("SELECT * FROM astro_events WHERE iso_date BETWEEN ? AND ?", (start_date, end_date)).fetchall()
 
-    # conn.close()
-
+    events_by_day = {}
     for event in db_events:
         d = datetime.fromisoformat(event['iso_date']).day
         events_by_day[d] = {
-            "id": event['slug'], # slugをidとして使う
+            "id": event['slug'], 
             "title": event['title'],
             "badge": event['badge'],
             "is_important": event['is_important']
         }
+
+    # Today's Recommendation Logic
+    recommendation = {
+        "title": "今日のおすすめ",
+        "icon": "fas fa-star",
+        "text": "夜空を見上げてみましょう。"
+    }
+    
+    # Get today's moon age if visible in current calendar context
+    # Usually we want the *actual* today's recommendation, regardless of the calendar view
+    # But if the user is looking at a past/future month, maybe show for that month view? 
+    # The requirement says "Today's Recommendation", implying the current real-world day.
+    
+    today_moon_age = None
+    if today.day in db_data and year == today.year and month == today.month:
+        today_moon_age = db_data[today.day]
+    else:
+        # Fetch for today specifically if not in current view
+        cursor.execute("SELECT moon_age FROM moon_data WHERE prefecture = '大阪(大阪府)' AND year = ? AND month = ? AND day = ?", 
+                      (today.year, today.month, today.day))
+        res = cursor.fetchone()
+        if res:
+            today_moon_age = res[0]
+            
+    if today_moon_age is not None:
+        try:
+            age = float(today_moon_age)
+            if age < 3 or age > 27:
+                recommendation = {"title": "星空観測に最適", "icon": "fas fa-star", "text": "月明かりがなく、天の川や淡い星団を探す絶好のチャンスです。", "bg_class": "bg-dark text-white"}
+            elif age < 7:
+                recommendation = {"title": "三日月を探そう", "icon": "fas fa-moon", "text": "夕暮れの西の空に浮かぶ繊細な月を楽しめます。地球照が見えるかも？", "bg_class": "bg-primary text-white"}
+            elif age < 12:
+                recommendation = {"title": "クレーター観測好機", "icon": "fas fa-circle-notch", "text": "半月の頃はクレーターの影がはっきり見え、望遠鏡や双眼鏡での観測に最適です。", "bg_class": "bg-info text-dark"}
+            elif age < 18:
+                recommendation = {"title": "月光浴を楽しもう", "icon": "far fa-moon", "text": "明るい月が夜道を照らします。夜の散歩や、月明かりの下での読書はいかが？", "bg_class": "bg-warning text-dark"}
+            else:
+                recommendation = {"title": "夜空を見上げよう", "icon": "fas fa-meteor", "text": "季節の星座を探してみましょう。", "bg_class": "bg-secondary text-white"}
+        except ValueError:
+            pass
+
+    # Tomorrow's Event Notification
+    tomorrow = today + timedelta(days=1)
+    tomorrow_iso_start = tomorrow.strftime("%Y-%m-%d")
+    tomorrow_event = c.execute("SELECT * FROM astro_events WHERE iso_date LIKE ? ORDER BY is_important DESC LIMIT 1", (f"{tomorrow_iso_start}%",)).fetchone()
 
     next_month = month + 1 if month < 12 else 1
     next_year = year if month < 12 else year + 1
@@ -120,6 +142,8 @@ def index():
         prev_month=prev_month,
         prev_year=prev_year,
         events_by_day=events_by_day,
+        recommendation=recommendation,
+        tomorrow_event=tomorrow_event,
         meta_description=f"{year}年{month}月の月齢カレンダー。今日の月の満ち欠けや、注目の天体イベントをチェックして、夜空を楽しもう。"
     )
 
