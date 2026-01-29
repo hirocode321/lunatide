@@ -7,8 +7,9 @@ astro_bp = Blueprint('astro', __name__)
 def astro():
     category = request.args.get('category')
     
-    conn = sqlite3.connect('inquiries.db')
-    conn.row_factory = sqlite3.Row
+    from database import get_moon_db
+    conn = get_moon_db()
+    # conn.row_factory = sqlite3.Row  # Already set in get_db
     c = conn.cursor()
     
     if category:
@@ -19,7 +20,8 @@ def astro():
     # Get unique badges for filter buttons
     badges = [row[0] for row in c.execute('SELECT DISTINCT badge FROM astro_events').fetchall()]
     
-    conn.close()
+    
+    # conn.close() - handled by teardown
     return render_template('astro.html', events=events, badges=badges, current_category=category)
 
 @astro_bp.route("/astroinfo")
@@ -28,11 +30,13 @@ def astroinfo():
     if not slug:
         abort(404)
         
-    conn = sqlite3.connect('inquiries.db')
-    conn.row_factory = sqlite3.Row
+    from database import get_moon_db
+    conn = get_moon_db()
+    # conn.row_factory = sqlite3.Row
     c = conn.cursor()
     event_data = c.execute('SELECT * FROM astro_events WHERE slug = ?', (slug,)).fetchone()
-    conn.close()
+    
+    # conn.close() - handled by teardown
     
     if not event_data:
         abort(404)

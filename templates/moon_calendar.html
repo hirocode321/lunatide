@@ -8,7 +8,7 @@
     {% if moon_data %}
     <div class="text-center my-4">
         <!-- 月齢画像 -->
-        <img src="{{ url_for('static', filename='images/' + moon_image) }}" alt="月画像" class="img-fluid">
+        <img src="{{ url_for('static', filename=moon_image) }}" alt="月画像" class="img-fluid">
     </div>
     <div class="text-center my-4">
         <p><strong>都道府県:</strong> {{ prefecture }}</p>

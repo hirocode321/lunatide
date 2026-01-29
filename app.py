@@ -1,5 +1,9 @@
 import os
 from flask import Flask, render_template
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 from routes.main import main_bp
 from routes.moon import moon_bp
@@ -8,7 +12,14 @@ from routes.astro import astro_bp
 from routes.admin import admin_bp
 
 app = Flask(__name__)
-app.secret_key = os.environ.get('SECRET_KEY', 'default_secret_key_for_dev')
+# Security: Prefer env var, fallback only for dev (and ideally warn)
+app.secret_key = os.environ.get('SECRET_KEY')
+if not app.secret_key:
+    if app.debug:
+        app.secret_key = 'default_insecure_dev_key'
+        print("WARNING: Key 'SECRET_KEY' not found in env. Using default insecure key for development.")
+    else:
+        raise ValueError("No SECRET_KEY set for production application")
 
 # Register Blueprints
 app.register_blueprint(main_bp)
@@ -24,6 +35,12 @@ def page_not_found(e):
 @app.errorhandler(500)
 def internal_server_error(e):
     return render_template('500.html'), 500
+
+@app.teardown_appcontext
+def close_connection(exception):
+    from database import close_connection
+    close_connection(exception)
+
 
 
 if __name__ == '__main__':

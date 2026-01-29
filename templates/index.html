@@ -130,34 +130,49 @@
         const phaseNameDisplay = document.getElementById('moon-phase-name');
 
         const phaseNames = [
-            { max: 1.5, name: "新月" },
-            { max: 6.5, name: "三日月" },
-            { max: 8.5, name: "上弦の月" },
-            { max: 13.5, name: "十日余りの月" },
-            { max: 16.5, name: "満月（望）" },
-            { max: 19.5, name: "十六夜月" },
-            { max: 22.5, name: "寝待月" },
-            { max: 24.5, name: "下弦の月" },
-            { max: 28.5, name: "明けの三日月" },
-            { max: 31, name: "新月直前" }
+            { max: 1.5, name: "新月 (New Moon)" },
+            { max: 6.5, name: "三日月 (Waxing Crescent)" },
+            { max: 8.5, name: "上弦の月 (First Quarter)" },
+            { max: 13.5, name: "十日余りの月 (Waxing Gibbous)" },
+            { max: 16.5, name: "満月 (Full Moon)" },
+            { max: 19.5, name: "十六夜月 (Waning Gibbous)" },
+            { max: 22.5, name: "寝待月 (Waning Gibbous)" },
+            { max: 24.5, name: "下弦の月 (Last Quarter)" },
+            { max: 28.5, name: "明けの三日月 (Waning Crescent)" },
+            { max: 31, name: "新月 (New Moon)" }
         ];
+
+        // Preload images for smoother sliding
+        const preloadImages = () => {
+            for (let i = 0; i <= 30; i++) {
+                const img = new Image();
+                img.src = `/static/images/moon_${i.toString().padStart(2, '0')}.png`;
+            }
+        };
+        // Start preloading after a short delay to prioritize initial page load
+        setTimeout(preloadImages, 1000);
 
         slider.addEventListener('input', function () {
             const age = parseFloat(this.value);
-            const intAge = Math.floor(age).toString().padStart(2, '0');
+            // Use Math.round for better alignment with integer image names
+            const intAge = Math.round(age).toString().padStart(2, '0');
 
             // Update image
-            moonImg.src = `/static/images/moon_${intAge}.png`;
+            const newSrc = `/static/images/moon_${intAge}.png`;
+            if (moonImg.src !== window.location.origin + newSrc) {
+                moonImg.src = newSrc;
+            }
 
             // Update display
             ageDisplay.innerText = `月齢: ${age.toFixed(1)}`;
 
             // Update name
-            const phase = phaseNames.find(p => age < p.max) || phaseNames[0];
+            const phase = phaseNames.find(p => age < p.max) || phaseNames[phaseNames.length - 1];
             phaseNameDisplay.innerText = phase.name;
 
-            // Visual effect
-            moonImg.style.transform = `scale(${1 + (age % 0.1)}) rotate(${(age - 15) * 0.5}deg)`;
+            // Subtle visual effect (removed jittery scale)
+            moonImg.style.transform = `rotate(${(age - 15) * 1}deg)`;
+            moonImg.style.opacity = '1'; 
         });
     });
 </script>

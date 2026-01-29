@@ -4,7 +4,7 @@ import sqlite3
 import re
 
 def migrate():
-    db_path = 'inquiries.db'
+    db_path = 'moon_data.db'
     base_dir = 'data/csv_folder'
     
     conn = sqlite3.connect(db_path)

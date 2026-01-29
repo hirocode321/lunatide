@@ -23,15 +23,26 @@ def index():
     days_in_month = list(cal.itermonthdays2(year, month))
 
     # データベースからの読み込み
-    conn = sqlite3.connect('inquiries.db')
+    from database import get_moon_db
+    conn = get_moon_db()
     cursor = conn.cursor()
+    
+    # データの有無を確認
+    cursor.execute("SELECT COUNT(*) FROM moon_data WHERE year = ?", (year,))
+    if cursor.fetchone()[0] == 0:
+        # データがない場合は、データがある最新の年（または2026年）にリダイレクト
+        cursor.execute("SELECT MAX(year) FROM moon_data")
+        available_year = cursor.fetchone()[0] or 2026
+        from flask import redirect
+        return redirect(url_for('main.index', year=available_year, month=month))
+
     # 大阪のデータ(月齢は全国共通として扱う)
     cursor.execute('''
         SELECT day, moon_age FROM moon_data 
-        WHERE prefecture = '大阪(大阪府)' AND month = ?
-    ''', (month,))
+        WHERE prefecture = '大阪(大阪府)' AND year = ? AND month = ?
+    ''', (year, month))
     db_data = {row[0]: row[1] for row in cursor.fetchall()}
-    conn.close()
+    # conn.close()
 
     moon_images = []
     moon_ages = []
@@ -70,14 +81,16 @@ def index():
 
     # データベースからのイベント読み込み (merged with existing or replacing JSON)
     # JSONとDBの両方を使う今の構造は少し複雑ですが、DB優先にします
-    conn = sqlite3.connect('inquiries.db')
-    conn.row_factory = sqlite3.Row
+    from database import get_moon_db
+    conn = get_moon_db()
+    # conn.row_factory = sqlite3.Row # Already set
     c = conn.cursor()
     # 月でフィルタリング（iso_dateは文字列比較できる）
     start_date = f"{year}-{month:02d}-01"
     end_date = f"{year}-{month:02d}-31"
     db_events = c.execute("SELECT * FROM astro_events WHERE iso_date BETWEEN ? AND ?", (start_date, end_date)).fetchall()
-    conn.close()
+
+    # conn.close()
 
     for event in db_events:
         d = datetime.fromisoformat(event['iso_date']).day
@@ -128,10 +141,12 @@ def sitemap():
         pages.append(url)
 
     # Dynamic pages (Astro Events)
-    conn = sqlite3.connect('inquiries.db')
+    from database import get_moon_db
+    conn = get_moon_db()
     cursor = conn.cursor()
     events = cursor.execute('SELECT slug FROM astro_events').fetchall()
-    conn.close()
+
+    # conn.close()
 
     for event in events:
         url = url_for('astro.astroinfo', event=event[0], _external=True)
@@ -154,15 +169,20 @@ def moon_detail(year, month, day):
     next_date = current_date + timedelta(days=1)
 
     # 月齢データの取得
-    conn = sqlite3.connect('inquiries.db')
+    from database import get_moon_db
+    conn = get_moon_db()
     cursor = conn.cursor()
     cursor.execute('''
         SELECT moon_age FROM moon_data 
-        WHERE prefecture = '大阪(大阪府)' AND month = ? AND day = ?
-    ''', (month, day))
+        WHERE prefecture = '大阪(大阪府)' AND year = ? AND month = ? AND day = ?
+    ''', (year, month, day))
     result = cursor.fetchone()
     
-    moon_age = result[0] if result else None
+    if not result:
+        # データがない場合は404
+        abort(404)
+        
+    moon_age = result[0]
     moon_image = index_get_moon_images(moon_age) if moon_age is not None else None
     moon_name = get_moon_name(moon_age) if moon_age is not None else None
 
@@ -178,7 +198,8 @@ def moon_detail(year, month, day):
         ORDER BY iso_date
     ''', (f"{target_iso_start}%",)).fetchall()
     
-    conn.close()
+    
+    # conn.close()
 
     return render_template(
         'moon_detail.html',

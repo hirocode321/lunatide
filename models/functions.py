@@ -3,15 +3,24 @@ from datetime import date
 import random,string
 import sqlite3
 
-def index_get_moon_images(moon_age):
-    # 月齢に応じた画像の決定
-    # 月齢が1から7の範囲で `moon_01.png` から `moon_07.png` などを返す
+
+# 統一された月齢画像取得関数
+def get_moon_age_image(moon_age):
     try:
-        moon_age = float(moon_age)  # 月齢が文字列として読み込まれるので、数値に変換
-        moon_image = f"images/moon_{int(moon_age):02d}.png"  # 画像ファイル名の作成
-        return moon_image
-    except ValueError:
-        return None  # 月齢が無効な場合、画像なし
+        moon_age = float(moon_age)
+        # 0 <= moon_age <= 30 の範囲で画像を選択
+        # 画像ファイルは moon_00.png ~ moon_30.png を想定
+        if moon_age < 0: moon_age = 0
+        if moon_age > 30: moon_age = 30
+        
+        image_index = int(round(moon_age))
+        return f"images/moon_{image_index:02d}.png"
+    except (ValueError, TypeError):
+        return "images/moon_00.png"
+
+# 互換性のためのエイリアス（必要に応じて）
+index_get_moon_images = get_moon_age_image
+moon_get_moon_images = get_moon_age_image
 
 def get_moon_name(moon_age):
     """月齢に対応する伝統的な和名を返す"""
@@ -34,18 +43,6 @@ def get_moon_name(moon_age):
     except (ValueError, TypeError):
         return None
     
-# 月齢に対応する画像名を返す関数
-def moon_get_moon_images(moon_age):
-    try:
-        moon_age = float(moon_age)
-        if 0.0 <= moon_age <= 30.0:
-            image_index = int(moon_age)  # moon_00.png から moon_30.png の画像を選ぶ
-        else:
-            image_index = 0  # 不正な月齢の場合のデフォルト画像
-        return f"moon_{image_index:02d}.png"
-    except ValueError:
-        return "moon_00.png"  # エラーハンドリング時のデフォルト画像
-
 # 都道府県リストを取得する関数
 def load_prefectures():
     with open('data/pref_name.csv', encoding='utf-8') as f:
@@ -62,10 +59,11 @@ def randomname(n):
     return ''.join(randlst)
     
 def init_db():
+    # Initialize inquiries.db
     conn = sqlite3.connect('inquiries.db')
     cursor = conn.cursor()
 
-    # inquiries テーブル（既存）
+    # inquiries テーブル
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS inquiries (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -76,19 +74,6 @@ def init_db():
         )
     ''')
     
-    # moon_data テーブル
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS moon_data (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            prefecture TEXT,
-            month INTEGER,
-            day INTEGER,
-            moon_rise TEXT,
-            moon_set TEXT,
-            moon_age TEXT
-        )
-    ''')
-
     # users テーブル
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS users (
@@ -98,8 +83,34 @@ def init_db():
         )
     ''')
 
+    # サンプルデータを挿入（適切なハッシュ化を行う）
+    from werkzeug.security import generate_password_hash
+    hashed_password = generate_password_hash('password123')
+    cursor.execute("INSERT OR IGNORE INTO users (username, password) VALUES (?, ?)",
+                   ('admin', hashed_password))
+    conn.commit()
+    conn.close()
+
+    # Initialize moon_data.db
+    conn_moon = sqlite3.connect('moon_data.db')
+    cursor_moon = conn_moon.cursor()
+
+    # moon_data テーブル
+    cursor_moon.execute('''
+        CREATE TABLE IF NOT EXISTS moon_data (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            prefecture TEXT,
+            month INTEGER,
+            day INTEGER,
+            moon_rise TEXT,
+            moon_set TEXT,
+            moon_age TEXT,
+            year INTEGER
+        )
+    ''')
+
     # astro_events テーブル
-    cursor.execute('''
+    cursor_moon.execute('''
         CREATE TABLE IF NOT EXISTS astro_events (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             slug TEXT UNIQUE,
@@ -115,10 +126,5 @@ def init_db():
         )
     ''')
 
-    # サンプルデータを挿入（適切なハッシュ化を行う）
-    from werkzeug.security import generate_password_hash
-    hashed_password = generate_password_hash('password123')
-    cursor.execute("INSERT OR IGNORE INTO users (username, password) VALUES (?, ?)",
-                   ('admin', hashed_password))
-    conn.commit()
-    conn.close()
+    conn_moon.commit()
+    conn_moon.close()

@@ -55,7 +55,8 @@ def confirm():
     if 'form_data' not in session:
         return redirect(url_for('admin.contact'))
     if request.method == 'POST':
-        conn = sqlite3.connect('inquiries.db')
+        from database import get_db
+        conn = get_db()
         cursor = conn.cursor()
         form_data = session['form_data']
         cursor.execute('''
@@ -63,7 +64,7 @@ def confirm():
             VALUES (?, ?, ?, ?)
         ''', (form_data['name'], form_data['email'] ,form_data['age'], form_data['content']))
         conn.commit()
-        conn.close()
+        # conn.close()
         session.pop('form_data', None)
         return redirect(url_for('admin.complete'))
     return render_template('confirm.html', form_data=session['form_data'])
@@ -77,11 +78,12 @@ def login():
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
-        conn = sqlite3.connect('inquiries.db')
+        from database import get_db
+        conn = get_db()
         cursor = conn.cursor()
         cursor.execute("SELECT password FROM users WHERE username = ?", (username,))
         user = cursor.fetchone()
-        conn.close()
+        # conn.close()
         if user and check_password_hash(user[0], password):
             session['logged_in'] = True
             session['username'] = username
@@ -102,10 +104,11 @@ def db_show():
     if not session.get('logged_in'):
         flash('このページを表示するにはログインが必要です。', 'warning')
         return redirect(url_for('admin.login'))
-    conn = sqlite3.connect('inquiries.db')
+    from database import get_db
+    conn = get_db()
     c = conn.cursor()
     db_datas = [row for row in c.execute('SELECT * FROM inquiries')]
-    conn.close()
+    # conn.close()
     return render_template('database.html', db_datas=db_datas)
 
 @admin_bp.route('/manage/<int:id>', methods=['GET', 'POST'])
@@ -113,10 +116,11 @@ def deleting_record(id):
     if not session.get('logged_in'):
         flash('このページを表示するにはログインが必要です。', 'warning')
         return redirect(url_for('admin.login'))
-    conn = sqlite3.connect('inquiries.db')
+    from database import get_db
+    conn = get_db()
     c = conn.cursor()
     db_data = list(c.execute('SELECT * FROM inquiries WHERE id = ?', (id,)))
-    conn.close()
+    # conn.close()
     if request.method == 'GET':
         if 'token' not in session:
             csrf_token = randomname(n)
@@ -129,11 +133,12 @@ def deleting_record(id):
         session_token = session.pop('token', None)
         if not form_token or form_token != session_token:
             abort(403)
-        conn = sqlite3.connect('inquiries.db')
+        from database import get_db
+        conn = get_db()
         c = conn.cursor()
         c.execute('DELETE FROM inquiries WHERE id = ?', (id,))
         conn.commit()
-        conn.close()
+        # conn.close()
         flash(f'ID {id} を削除しました。', 'success')
         return redirect(url_for('admin.db_show'))
 
@@ -143,11 +148,12 @@ def astro_list():
     if not session.get('logged_in'):
         return redirect(url_for('admin.login'))
     
-    conn = sqlite3.connect('inquiries.db')
-    conn.row_factory = sqlite3.Row
+    from database import get_moon_db
+    conn = get_moon_db()
+    # conn.row_factory = sqlite3.Row # Already set
     c = conn.cursor()
     events = c.execute('SELECT * FROM astro_events ORDER BY iso_date').fetchall()
-    conn.close()
+    # conn.close()
     
     # CSRF Token generation
     if 'token' not in session:
@@ -189,7 +195,8 @@ def astro_add():
                 file.save(os.path.join(UPLOAD_FOLDER, filename))
                 image_url = f"uploads/astro/{filename}"
         
-        conn = sqlite3.connect('inquiries.db')
+        from database import get_moon_db
+        conn = get_moon_db()
         c = conn.cursor()
         try:
             c.execute('''
@@ -202,7 +209,8 @@ def astro_add():
         except sqlite3.IntegrityError:
             flash('エラー: スラッグが既に使用されています。別のスラッグを指定してください。', 'danger')
         finally:
-            conn.close()
+            # conn.close()
+            pass
             
     if 'token' not in session:
         session['token'] = randomname(n)
@@ -214,20 +222,21 @@ def astro_edit(id):
     if not session.get('logged_in'):
         return redirect(url_for('admin.login'))
         
-    conn = sqlite3.connect('inquiries.db')
-    conn.row_factory = sqlite3.Row
+    from database import get_moon_db
+    conn = get_moon_db()
+    # conn.row_factory = sqlite3.Row
     c = conn.cursor()
     event = c.execute('SELECT * FROM astro_events WHERE id = ?', (id,)).fetchone()
     
     if not event:
-        conn.close()
+        # conn.close()
         flash('イベントが見つかりません。', 'warning')
         return redirect(url_for('admin.astro_list'))
         
     if request.method == 'POST':
         # Verify CSRF
         if request.form.get('csrf_token') != session.get('token'):
-            conn.close()
+            # conn.close()
             abort(403)
             
         slug = request.form.get('slug')
@@ -260,15 +269,15 @@ def astro_edit(id):
             ''', (slug, title, date_text, description, details, tips, badge, iso_date, image_url, is_important, id))
             conn.commit()
             flash('イベントを更新しました。', 'success')
-            conn.close()
+            # conn.close()
             return redirect(url_for('admin.astro_list'))
         except sqlite3.IntegrityError:
             flash('エラー: スラッグが既に使用されています。別のスラッグを指定してください。', 'danger')
-            conn.close()
+            # conn.close()
             # リロードせずにフォーム再表示するならここでrender_templateすべきだが、簡易的にredirect
             return redirect(url_for('admin.astro_edit', id=id))
 
-    conn.close()
+    # conn.close()
     if 'token' not in session:
         session['token'] = randomname(n)
         
@@ -282,11 +291,12 @@ def astro_delete(id):
     if request.form.get('csrf_token') != session.get('token'):
         abort(403)
         
-    conn = sqlite3.connect('inquiries.db')
+    from database import get_moon_db
+    conn = get_moon_db()
     c = conn.cursor()
     c.execute('DELETE FROM astro_events WHERE id = ?', (id,))
     conn.commit()
-    conn.close()
+    # conn.close()
     
     flash('イベントを削除しました。', 'success')
     return redirect(url_for('admin.astro_list'))

@@ -1,0 +1,23 @@
+--- moon_data schema ---
+CREATE TABLE moon_data (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            prefecture TEXT,
+            month INTEGER,
+            day INTEGER,
+            moon_rise TEXT,
+            moon_set TEXT,
+            moon_age TEXT
+        , year INTEGER)
+
+--- astro_events schema ---
+CREATE TABLE astro_events (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            slug TEXT UNIQUE,
+            title TEXT NOT NULL,
+            date_text TEXT,
+            description TEXT,
+            details TEXT,
+            tips TEXT,
+            badge TEXT,
+            iso_date TEXT
+        , is_important BOOLEAN DEFAULT 0)

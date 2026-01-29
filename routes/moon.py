@@ -15,19 +15,22 @@ def moon_calendar():
     prefectures = load_prefectures()
     prefecture = request.form['prefecture']
     selected_date = request.form['date']
-
-    month = selected_date.split('-')[1]
-    day = int(selected_date.split('-')[2])
+    selected_date_parts = selected_date.split('-')
+    year = int(selected_date_parts[0])
+    month = int(selected_date_parts[1])
+    day = int(selected_date_parts[2])
 
     # データベースからの読み込み
-    conn = sqlite3.connect('inquiries.db')
+    # データベースからの読み込み
+    from database import get_moon_db
+    conn = get_moon_db()
     cursor = conn.cursor()
     cursor.execute('''
         SELECT moon_rise, moon_set, moon_age FROM moon_data 
-        WHERE prefecture = ? AND month = ? AND day = ?
-    ''', (prefecture, int(month), day))
+        WHERE prefecture = ? AND year = ? AND month = ? AND day = ?
+    ''', (prefecture, year, month, day))
     row = cursor.fetchone()
-    conn.close()
+    # conn.close()
 
     moon_data = None
     moon_image = "moon_00.png"
