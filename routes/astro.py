@@ -1,5 +1,6 @@
 from flask import Blueprint, render_template, request, abort
 import sqlite3
+from database import get_moon_db
 
 astro_bp = Blueprint('astro', __name__)
 

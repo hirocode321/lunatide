@@ -1,10 +1,9 @@
-from flask import Blueprint, render_template, request, make_response, url_for, abort
+from flask import Blueprint, render_template, request, make_response, url_for, abort, redirect
 from datetime import datetime, date, timedelta
 import calendar
 import sqlite3
 from models.functions import index_get_moon_images, get_moon_name
-
-main_bp = Blueprint('main', __name__)
+from database import get_moon_db
 
 main_bp = Blueprint('main', __name__)
 
@@ -15,7 +14,6 @@ def index():
     month = request.args.get('month', default=datetime.now().month, type=int)
 
     # 当日の日付
-    from datetime import date
     today = date.today()
 
     # 月の日数と月初の曜日を計算
@@ -33,7 +31,6 @@ def index():
         # データがない場合は、データがある最新の年（または2026年）にリダイレクト
         cursor.execute("SELECT MAX(year) FROM moon_data")
         available_year = cursor.fetchone()[0] or 2026
-        from flask import redirect
         return redirect(url_for('main.index', year=available_year, month=month))
 
     # 大阪のデータ(月齢は全国共通として扱う)
@@ -58,6 +55,19 @@ def index():
             moon_ages.append(None)
             moon_images.append(None)
             moon_names.append(None)
+
+    # Photography Potential Logic (Best when moon is small)
+    photo_potential = []
+    for age in moon_ages:
+        if age is not None:
+            try:
+                f_age = float(age)
+                # Moon Age < 5 or > 25 is generally good for stars
+                photo_potential.append(f_age < 5 or f_age > 25)
+            except ValueError:
+                photo_potential.append(False)
+        else:
+            photo_potential.append(False)
 
     # 天文イベントの読み込み
     from database import get_moon_db
@@ -142,8 +152,10 @@ def index():
         prev_month=prev_month,
         prev_year=prev_year,
         events_by_day=events_by_day,
+        db_events=db_events,
         recommendation=recommendation,
         tomorrow_event=tomorrow_event,
+        photo_potential=photo_potential,
         meta_description=f"{year}年{month}月の月齢カレンダー。今日の月の満ち欠けや、注目の天体イベントをチェックして、夜空を楽しもう。"
     )
 

@@ -10,16 +10,20 @@ from routes.moon import moon_bp
 from routes.tide import tide_bp
 from routes.astro import astro_bp
 from routes.admin import admin_bp
+from routes.guide import guide_bp
 
 app = Flask(__name__)
-# Security: Prefer env var, fallback only for dev (and ideally warn)
+
+# Configuration
 app.secret_key = os.environ.get('SECRET_KEY')
+debug_mode = os.environ.get('FLASK_DEBUG', 'true').lower() == 'true'
+
 if not app.secret_key:
-    if app.debug:
+    if debug_mode:
         app.secret_key = 'default_insecure_dev_key'
         print("WARNING: Key 'SECRET_KEY' not found in env. Using default insecure key for development.")
     else:
-        raise ValueError("No SECRET_KEY set for production application")
+        raise ValueError("No SECRET_KEY set for production application. Set SECRET_KEY environment variable.")
 
 # Register Blueprints
 app.register_blueprint(main_bp)
@@ -27,6 +31,7 @@ app.register_blueprint(moon_bp)
 app.register_blueprint(tide_bp)
 app.register_blueprint(astro_bp)
 app.register_blueprint(admin_bp)
+app.register_blueprint(guide_bp)
 
 @app.errorhandler(404)
 def page_not_found(e):
@@ -44,5 +49,5 @@ def close_connection(exception):
 
 
 if __name__ == '__main__':
-    # init_db()
-    app.run(port=5555, debug=True)
+    port = int(os.environ.get('PORT', 5555))
+    app.run(host='0.0.0.0', port=port, debug=debug_mode)

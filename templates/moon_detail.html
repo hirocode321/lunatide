@@ -96,6 +96,25 @@
             </div>
             {% endif %}
 
+            <div class="card bg-dark border-secondary mb-5">
+                <div class="card-body text-center p-4">
+                    <h5 class="mb-3 small text-uppercase letter-spacing-2 text-secondary">Share this page</h5>
+                    <div class="d-flex justify-content-center gap-3">
+                        {% set share_text = year ~ "年" ~ month ~ "月" ~ day ~ "日の月齢は " ~ moon_age ~ " です。 #LunaTide" %}
+                        {% set share_url = url_for('main.moon_detail', year=year, month=month, day=day, _external=True)
+                        %}
+                        <a href="https://x.com/intent/tweet?text={{ share_text | urlencode }}&url={{ share_url | urlencode }}"
+                            target="_blank" class="btn btn-x-share rounded-pill px-4">
+                            <i class="fab fa-x-twitter me-2"></i>Xでシェア
+                        </a>
+                        <a href="https://social-plugins.line.me/lineit/share?url={{ share_url | urlencode }}"
+                            target="_blank" class="btn btn-line-share rounded-pill px-4">
+                            <i class="fab fa-line me-2"></i>LINEで送る
+                        </a>
+                    </div>
+                </div>
+            </div>
+
             <div class="text-center">
                 <a href="{{ url_for('main.index', year=year, month=month) }}" class="btn btn-outline-secondary">
                     <i class="fas fa-calendar-alt me-2"></i>カレンダーに戻る

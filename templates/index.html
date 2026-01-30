@@ -7,6 +7,9 @@
     <div class="text-center mb-4">
         <h1 class="display-5 font-weight-bold">{{ year }}年{{ month }}月</h1>
         <p class="text-secondary">月齢と星々が織りなす、今月のリズム</p>
+        <div class="small text-muted mb-4">
+            <i class="fas fa-location-dot me-1"></i>観測地点: 大阪
+        </div>
     </div>
 
     <!-- Notifications & Recommendations -->
@@ -17,24 +20,34 @@
                 <div class="display-6 me-3"><i class="fas fa-bell"></i></div>
                 <div>
                     <h5 class="alert-heading mb-1">明日、注目の天体イベントがあります！</h5>
-                    <p class="mb-0">{{ tomorrow_event.title }} ({{ tomorrow_event.iso_date }}) - <a href="{{ url_for('astro.astroinfo', event=tomorrow_event.slug) }}" class="alert-link">詳細を見る</a></p>
+                    <p class="mb-0">{{ tomorrow_event.title }} ({{ tomorrow_event.iso_date }}) - <a
+                            href="{{ url_for('astro.astroinfo', event=tomorrow_event.slug) }}"
+                            class="alert-link">詳細を見る</a></p>
                 </div>
             </div>
             {% endif %}
 
             {% if recommendation %}
-            <div class="card border-0 shadow-sm {{ recommendation.bg_class or 'bg-light text-dark' }}">
-                <div class="card-body d-flex align-items-center">
-                    <div class="display-4 me-4 opacity-75"><i class="{{ recommendation.icon }}"></i></div>
+            <div class="card border-0 shadow-lg {{ recommendation.bg_class or 'bg-light text-dark' }}"
+                style="background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05)); border: 1px solid rgba(255,255,255,0.1) !important;">
+                <div class="card-body d-flex align-items-center p-4">
+                    <div class="display-4 me-4" style="filter: drop-shadow(0 0 10px currentColor); opacity: 0.9;"><i
+                            class="{{ recommendation.icon }}"></i></div>
                     <div>
-                        <h5 class="card-title fw-bold">今日のおすすめ: {{ recommendation.title }}</h5>
-                        <p class="card-text mb-0">{{ recommendation.text }}</p>
-                        <!-- Visibility Visualization Placeholder -->
+                        <h5 class="card-title fw-bold mb-1">今日のおすすめ: {{ recommendation.title }}</h5>
+                        <p class="card-text mb-0 opacity-90">{{ recommendation.text }}</p>
+                        <!-- Visibility Visualization -->
                         <div class="mt-2 text-warning">
                             {% if '星空観測に最適' in recommendation.title %}
-                            <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i> <span class="text-white small ms-1">観測好機</span>
-                            {% elif '三日月' in recommendation.title %}
-                            <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="far fa-star"></i><i class="far fa-star"></i>
+                            <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i
+                                class="fas fa-star"></i><i class="fas fa-star"></i> <span
+                                class="text-white small ms-1">絶好の観測日</span>
+                            {% elif '三日月' in recommendation.title or 'クレーター' in recommendation.title %}
+                            <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i
+                                class="far fa-star"></i><i class="far fa-star"></i>
+                            {% else %}
+                            <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="far fa-star"></i><i
+                                class="far fa-star"></i><i class="far fa-star"></i>
                             {% endif %}
                         </div>
                     </div>
@@ -103,6 +116,12 @@
                     {% endif %}
                 </div>
                 {% endif %}
+
+                {% if photo_potential[loop.index0] %}
+                <div class="photo-marker" style="position: absolute; top: 5px; right: 5px;">
+                    <i class="fas fa-camera text-success small" title="星空撮影に最適" data-bs-toggle="tooltip"></i>
+                </div>
+                {% endif %}
             </a>
         </div>
         {% else %}
@@ -114,7 +133,60 @@
     <!-- Instructions / Legend -->
     <div class="mt-5 text-center small text-secondary">
         <span class="me-3"><i class="fas fa-star text-warning me-1"></i> 特別な天体イベント</span>
-        <span><i class="far fa-circle me-1"></i> 日付をクリックで詳細を表示（予定）</span>
+        <span class="me-3"><i class="fas fa-camera text-success me-1"></i> 星空撮影の好機</span>
+        <span><i class="far fa-circle me-1"></i> 日付をクリックで詳細を表示</span>
+    </div>
+
+    <div class="mt-4 text-center">
+        {% set share_url = url_for('main.index', year=year, month=month, _external=True) %}
+        {% set share_text = year ~ "年" ~ month ~ "月の月齢カレンダーと天文イベントをチェック！ #LunaTide" %}
+        <a href="https://x.com/intent/tweet?text={{ share_text | urlencode }}&url={{ share_url | urlencode }}"
+            target="_blank" class="btn btn-x-share rounded-pill px-4">
+            <i class="fab fa-x-twitter me-2"></i>今月のカレンダーをシェア
+        </a>
+    </div>
+
+    <!-- Monthly Highlights Section -->
+    {% if db_events %}
+    <div class="mt-5 pt-4">
+        <h3 class="h4 mb-4 border-start border-primary border-4 ps-3">今月の天文ハイライト</h3>
+        <div class="row row-cols-1 row-cols-md-2 g-4">
+            {% for event in db_events %}
+            <div class="col">
+                <div class="card h-100 bg-dark border-secondary hover-lift">
+                    <div class="card-body d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="small text-primary font-monospace mb-1">{{ event.iso_date }}</div>
+                            <h5 class="h6 mb-0">{{ event.title }}</h5>
+                        </div>
+                        <a href="{{ url_for('astro.astroinfo', event=event.slug) }}"
+                            class="btn btn-sm btn-outline-light rounded-pill px-3">
+                            詳細 <i class="fas fa-chevron-right ms-1 small"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Beginner Guide CTA -->
+    <div class="mt-5 p-5 bg-dark border-0 shadow-lg rounded-4 text-center position-relative overflow-hidden"
+        style="background: linear-gradient(135deg, #1a1f26 0%, #0d1117 100%) !important;">
+        <div class="position-absolute translate-middle-y end-0 opacity-10 d-none d-lg-block"
+            style="top: 50%; right: -50px; font-size: 200px;">
+            <i class="fas fa-camera"></i>
+        </div>
+        <div class="position-relative">
+            <h3 class="h2 text-white mb-3 fw-bold">カメラで夜空を切り取ろう</h3>
+            <p class="text-secondary lead mb-4 mx-auto" style="max-width: 600px;">
+                初心者でも大丈夫。星を綺麗に撮るための設定やコツ、機材の選び方をガイドにまとめました。
+            </p>
+            <a href="{{ url_for('guide.index') }}" class="btn btn-primary btn-lg px-5 rounded-pill shadow-sm">
+                <i class="fas fa-book-open me-2"></i>撮影ガイドを見る
+            </a>
+        </div>
     </div>
 
     <hr class="my-5 opacity-25">
@@ -207,7 +279,7 @@
 
             // Subtle visual effect (removed jittery scale)
             moonImg.style.transform = `rotate(${(age - 15) * 1}deg)`;
-            moonImg.style.opacity = '1'; 
+            moonImg.style.opacity = '1';
         });
     });
 </script>

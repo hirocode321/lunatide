@@ -1,0 +1,284 @@
+{% extends "base.html" %}
+
+{% block title %}初心者向け撮影ガイド - LunaTide{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-5 text-center">
+        <div class="col-12">
+            <h1 class="display-4 fw-bold text-white mb-3">Beginner's Photo Guide</h1>
+            <p class="lead text-light">夜空の美しさを、あなたのカメラで。初心者のための撮影ガイドです。</p>
+        </div>
+    </div>
+
+    <!-- Features Navigation -->
+    <ul class="nav nav-pills nav-fill mb-4 bg-dark p-2 rounded shadow-sm sticky-top" style="top: 10px; z-index: 1020;"
+        id="guideTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="calc-tab" data-bs-toggle="tab" data-bs-target="#calc-pane" type="button"
+                role="tab"><i class="fas fa-calculator me-2"></i>露出計算</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="check-tab" data-bs-toggle="tab" data-bs-target="#check-pane" type="button"
+                role="tab"><i class="fas fa-list-check me-2"></i>持ち物</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="focus-tab" data-bs-toggle="tab" data-bs-target="#focus-pane" type="button"
+                role="tab"><i class="fas fa-crosshairs me-2"></i>ピント合わせ</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="settings-tab" data-bs-toggle="tab" data-bs-target="#settings-pane"
+                type="button" role="tab"><i class="fas fa-cogs me-2"></i>設定の目安</button>
+        </li>
+    </ul>
+
+    <div class="tab-content border-0" id="guideTabContent">
+        <!-- 1. Exposure Calculator -->
+        <div class="tab-pane fade show active" id="calc-pane" role="tabpanel" tabindex="0">
+            <div class="card bg-dark text-white border-secondary shadow">
+                <div class="card-body p-4">
+                    <h2 class="h3 mb-4"><i class="fas fa-calculator text-primary me-2"></i>星を点に写す：500ルール計算機</h2>
+                    <p class="text-secondary small mb-4">
+                        星はゆっくりと動いているため、シャッタースピードが長すぎると線のように伸びてしまいます。星を点として写すための限界時間を計算します。</p>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="focalLength" class="form-label">レンズの焦点距離 (mm)</label>
+                            <input type="number" class="form-control bg-secondary text-white border-0" id="focalLength"
+                                placeholder="例: 14" value="24">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="sensorType" class="form-label">センサーサイズ</label>
+                            <select class="form-select bg-secondary text-white border-0" id="sensorType">
+                                <option value="1">フルサイズ (1.0x)</option>
+                                <option value="1.5">APS-C (1.5x - Sony, Nikon, Fuji)</option>
+                                <option value="1.6">APS-C (1.6x - Canon)</option>
+                                <option value="2">マイクロフォーサーズ (2.0x)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 p-4 bg-black rounded text-center border border-primary">
+                        <h3 class="h6 text-uppercase text-secondary mb-2">おすすめのシャッタースピード</h3>
+                        <div class="display-2 fw-bold text-primary" id="calcResult">21</div>
+                        <p class="text-light mt-2">秒 以下</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. Equipment Checklist -->
+        <div class="tab-pane fade" id="check-pane" role="tabpanel" tabindex="0">
+            <div class="card bg-dark text-white border-secondary shadow">
+                <div class="card-body p-4">
+                    <h2 class="h3 mb-4"><i class="fas fa-list-check text-success me-2"></i>撮影の持ち物チェックリスト</h2>
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <h4 class="h5 text-primary">必須アイテム</h4>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="item1">
+                                <label class="form-check-label" for="item1">カメラ (マニュアル撮影ができるもの)</label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="item2">
+                                <label class="form-check-label" for="item2">広角レンズ (F値が小さいほど良い)</label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="item3">
+                                <label class="form-check-label" for="item3">三脚 (しっかり固定できるもの)</label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="item4">
+                                <label class="form-check-label" for="item4">予備バッテリー & SDカード</label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <h4 class="h5 text-warning">あると便利なもの</h4>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="item5">
+                                <label class="form-check-label" for="item5">レリーズ (または2秒セルフタイマー)</label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="item6">
+                                <label class="form-check-label" for="item6">赤いライト (暗闇に目が慣れるのを防ぐ)</label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="item7">
+                                <label class="form-check-label" for="item7">防寒着 (夜は想像以上に冷えます)</label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="item8">
+                                <label class="form-check-label" for="item8">モバイルバッテリー</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. Focus Guide -->
+        <div class="tab-pane fade" id="focus-pane" role="tabpanel" tabindex="0">
+            <div class="card bg-dark text-white border-secondary shadow">
+                <div class="card-body p-4">
+                    <h2 class="h3 mb-4"><i class="fas fa-crosshairs text-info me-2"></i>星にピントを合わせるコツ</h2>
+                    <div class="timeline">
+                        <div class="mb-4">
+                            <h4 class="text-info">1. マニュアルフォーカス(MF)にする</h4>
+                            <p>星は暗すぎるため、オートフォーカスは効きません。レンズのスイッチを必ずMFに切り替えましょう。</p>
+                        </div>
+                        <div class="mb-4">
+                            <h4 class="text-info">2. 明るい星を探す</h4>
+                            <p>ライブビュー画面で、できるだけ明るい星を画面の中央に配置します。</p>
+                        </div>
+                        <div class="mb-4">
+                            <h4 class="text-info">3. 画面を最大まで拡大する</h4>
+                            <p>拡大表示機能（虫眼鏡アイコンなど）を使い、星を大きく映し出します。</p>
+                        </div>
+                        <div class="mb-4">
+                            <h4 class="text-info">4. 星が一番小さくなる位置を探す</h4>
+                            <p>フォーカスリングをゆっくり回し、星の光の点が「最も小さく、ハッキリした点」になる場所を見つけます。それがピントの合った状態です。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. Settings Cheat Sheet -->
+        <div class="tab-pane fade" id="settings-pane" role="tabpanel" tabindex="0">
+            <div class="card bg-dark text-white border-secondary shadow">
+                <div class="card-body p-4">
+                    <h2 class="h3 mb-4"><i class="fas fa-cogs text-warning me-2"></i>被写体別・設定の目安</h2>
+                    <div class="table-responsive">
+                        <table class="table table-dark table-hover border-secondary">
+                            <thead>
+                                <tr class="text-primary">
+                                    <th>被写体</th>
+                                    <th>絞り (F値)</th>
+                                    <th>ISO感度</th>
+                                    <th>露出時間</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>天の川・満天の星</td>
+                                    <td>開放 (F2.8以下推奨)</td>
+                                    <td>1600 - 6400</td>
+                                    <td>15 - 25秒</td>
+                                </tr>
+                                <tr>
+                                    <td>月 (月齢による)</td>
+                                    <td>F8 - F11</td>
+                                    <td>100 - 400</td>
+                                    <td>1/100 - 1/500秒</td>
+                                </tr>
+                                <tr>
+                                    <td>流星群</td>
+                                    <td>開放 (最も明るい値)</td>
+                                    <td>3200以上</td>
+                                    <td>10 - 20秒 (連写)</td>
+                                </tr>
+                                <tr>
+                                    <td>星の軌跡 (比較明合成)</td>
+                                    <td>F4 - F5.6</td>
+                                    <td>400 - 1600</td>
+                                    <td>20 - 30秒 (多数撮影)</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="alert alert-info bg-opacity-10 border-info text-info mt-3">
+                        <i class="fas fa-lightbulb me-2"></i><strong>Tip:</strong> RAW形式の保存を忘れずに！後で明るさや色味を調整しやすくなります。
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recommendation Section -->
+    <div class="row mt-5">
+        <div class="col-12 text-center">
+            <h3 class="text-white mb-4">撮影の計画を立てよう</h3>
+            <div class="d-flex justify-content-center gap-3">
+                <a href="{{ url_for('main.index') }}" class="btn btn-outline-light btn-lg px-4"><i
+                        class="fas fa-calendar-alt me-2"></i>カレンダーを見る</a>
+                <a href="{{ url_for('astro.astro') }}" class="btn btn-primary btn-lg px-4"><i
+                        class="fas fa-star me-2"></i>天文イベントを探す</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    #guideTabs .nav-link {
+        color: #adb5bd;
+        transition: all 0.3s;
+        border-radius: 8px;
+        margin: 0 5px;
+    }
+
+    #guideTabs .nav-link.active {
+        background-color: #3d5afe;
+        color: white;
+    }
+
+    #guideTabs .nav-link:hover:not(.active) {
+        background-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .card {
+        border-radius: 15px;
+        background: linear-gradient(145deg, #161b22, #0d1117);
+    }
+
+    .form-control,
+    .form-select {
+        border-radius: 8px;
+        padding: 12px;
+    }
+
+    .timeline {
+        border-left: 2px solid #3d5afe;
+        padding-left: 30px;
+        margin-left: 10px;
+        position: relative;
+    }
+
+    .timeline>div::before {
+        content: '';
+        position: absolute;
+        left: -9px;
+        width: 16px;
+        height: 16px;
+        background: #3d5afe;
+        border-radius: 50%;
+        margin-top: 5px;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const focalInput = document.getElementById('focalLength');
+        const sensorSelect = document.getElementById('sensorType');
+        const resultDisplay = document.getElementById('calcResult');
+
+        function calculateExposure() {
+            const focalLength = parseFloat(focalInput.value);
+            const cropFactor = parseFloat(sensorSelect.value);
+
+            if (focalLength > 0) {
+                // 500 Rule: Shutter Speed = 500 / (Focal Length * Crop Factor)
+                const limit = 500 / (focalLength * cropFactor);
+                resultDisplay.innerText = Math.floor(limit);
+            } else {
+                resultDisplay.innerText = '-';
+            }
+        }
+
+        focalInput.addEventListener('input', calculateExposure);
+        sensorSelect.addEventListener('change', calculateExposure);
+
+        // Initial calculation
+        calculateExposure();
+    });
+</script>
+{% endblock %}
