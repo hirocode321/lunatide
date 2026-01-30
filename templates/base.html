@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}LunaTide{% endblock %}</title>
+    <title>{% block title %}Astro Navigator{% endblock %}</title>
     <!-- SEO & OGP -->
     <meta name="description" content="{{ meta_description | default('月齢、潮汐、そして天体イベントを美しく、正確に。あなたの夜空への案内人。') }}">
     <meta property="og:title" content="{% block og_title %}{{ self.title() }}{% endblock %}">
@@ -37,7 +37,7 @@
         <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
             <div class="container-fluid">
                 <a class="navbar-brand" href="{{ url_for('main.index') }}">
-                    LunaTide
+                    Astro Navigator
                     <img src="{{ url_for('static', filename='logo_image/logo2.webp') }}" alt="LunaTide ロゴ" class="me-2"
                         style="height: 40px;">
                 </a>
@@ -83,7 +83,7 @@
 
     <!-- Footer -->
     <footer class="text-white text-center py-4">
-        <p class="mb-0">&copy; 2026 LunaTide. All Rights Reserved.</p>
+        <p class="mb-0">&copy; 2026 Astro Navigator. All Rights Reserved.</p>
         <p class="mb-0">
             <a href="{{ url_for('main.privacy') }}" class="text-white text-decoration-none">プライバシーポリシー</a> |
             <a href="{{ url_for('main.terms') }}" class="text-white text-decoration-none">利用規約</a>
@@ -153,5 +153,6 @@
         }
     </script>
 </body>
+
 
 </html>
