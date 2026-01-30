@@ -17,7 +17,9 @@
                 <div class="card-header bg-dark text-white p-4">
                     <div class="d-flex justify-content-between align-items-start">
                         <div>
-                            <span class="badge bg-light text-dark mb-2">{{ event.badge }}</span>
+                            <span
+                                class="badge mb-2 {% if event.badge == '月食' %}badge-lunar-eclipse{% elif event.badge == '流星群' %}badge-meteor-shower{% elif event.badge == '惑星観測' %}badge-planetary{% elif event.badge == '満月' %}badge-full-moon{% elif event.badge == 'レア現象' %}badge-rare{% else %}bg-light text-dark{% endif %}">{{
+                                event.badge }}</span>
                             <h1 class="h2 mb-0">{{ event.title }}</h1>
                             <p class="mb-0 mt-2 opacity-75"><i class="far fa-calendar-alt me-2"></i>{{ event.date }}</p>
                         </div>

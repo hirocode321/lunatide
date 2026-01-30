@@ -4,7 +4,7 @@ import os
 
 def migrate():
     # 1. データベース接続
-    conn = sqlite3.connect('inquiries.db')
+    conn = sqlite3.connect('moon_data.db')
     cursor = conn.cursor()
 
     # テーブルを再作成するために既存のテーブルを削除
@@ -16,7 +16,7 @@ def migrate():
     from models.functions import init_db
     init_db()
 
-    conn = sqlite3.connect('inquiries.db')
+    conn = sqlite3.connect('moon_data.db')
     cursor = conn.cursor()
 
     # 2. JSONデータの読み込み
@@ -34,8 +34,11 @@ def migrate():
         slug = event_id
         
         cursor.execute('''
-            INSERT INTO astro_events (slug, title, date_text, description, details, tips, badge, iso_date)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO astro_events (
+                slug, title, date_text, description, details, tips, badge, iso_date,
+                image_url, is_important, direction, time_range, altitude, viewing_mode, visibility_score
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ''', (
             slug,
             info['title'],
@@ -44,7 +47,14 @@ def migrate():
             info['details'],
             info['tips'],
             info['badge'],
-            info['iso_date']
+            info['iso_date'],
+            info.get('image_url'),
+            info.get('is_important', 0), # Default to 0 (False) if not present
+            info.get('direction'),
+            info.get('time_range'),
+            info.get('altitude'),
+            info.get('viewing_mode'),
+            info.get('visibility_score')
         ))
         print(f"Imported: {info['title']} (slug: {slug})")
 

@@ -43,7 +43,9 @@
                         <tr>
                             <td class="ps-4 fw-bold">{{ event.title }}</td>
                             <td>{{ event.date_text }}</td>
-                            <td><span class="badge bg-secondary">{{ event.badge }}</span></td>
+                            <td><span
+                                    class="badge {% if event.badge == '月食' %}badge-lunar-eclipse{% elif event.badge == '流星群' %}badge-meteor-shower{% elif event.badge == '惑星観測' %}badge-planetary{% elif event.badge == '満月' %}badge-full-moon{% elif event.badge == 'レア現象' %}badge-rare{% else %}bg-secondary{% endif %}">{{
+                                    event.badge }}</span></td>
                             <td class="text-muted small">{{ event.slug }}</td>
                             <td class="text-center">
                                 <button class="btn btn-sm btn-outline-info copy-btn"

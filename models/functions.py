@@ -122,7 +122,12 @@ def init_db():
             badge TEXT,
             iso_date TEXT,
             image_url TEXT,
-            is_important BOOLEAN DEFAULT 0
+            is_important BOOLEAN DEFAULT 0,
+            direction TEXT,
+            time_range TEXT,
+            altitude TEXT,
+            viewing_mode TEXT,
+            visibility_score INTEGER
         )
     ''')
 

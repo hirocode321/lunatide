@@ -318,6 +318,13 @@ body {
     letter-spacing: 0.5px;
 }
 
+/* Custom Badge Colors for Astro Events */
+.badge-lunar-eclipse { background-color: #d63031 !important; color: #fff !important; } /* Blood Moon Red */
+.badge-meteor-shower { background-color: #fdcb6e !important; color: #2d3436 !important; } /* Meteor Gold */
+.badge-planetary { background-color: #0984e3 !important; color: #fff !important; } /* Planet Blue */
+.badge-full-moon { background-color: #dfe6e9 !important; color: #2d3436 !important; } /* Moon Silver */
+.badge-rare { background-color: #6c5ce7 !important; color: #fff !important; } /* Rare Purple */
+
 footer {
     background: rgba(15, 12, 41, 0.9) !important;
     border-top: 1px solid var(--glass-border);
