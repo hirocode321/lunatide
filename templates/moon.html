@@ -12,9 +12,9 @@
             <!-- 都道府県選択 -->
             <div class="col-auto">
                 <select name="prefecture" class="form-select" required>
-                    <option value="" disabled selected>都道府県を選択</option>
+                    <option value="" disabled {% if not pref_location %}selected{% endif %}>都道府県を選択</option>
                     {% for pref in prefectures %}
-                        <option value="{{ pref }}">{{ pref }}</option>
+                        <option value="{{ pref }}" {% if pref == pref_location %}selected{% endif %}>{{ pref }}</option>
                     {% endfor %}
                 </select>
             </div>

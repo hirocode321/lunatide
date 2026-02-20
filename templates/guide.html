@@ -27,6 +27,18 @@
                 role="tab"><i class="fas fa-crosshairs me-2"></i>ピント合わせ</button>
         </li>
         <li class="nav-item" role="presentation">
+            <button class="nav-link" id="location-tab" data-bs-toggle="tab" data-bs-target="#location-pane"
+                type="button" role="tab"><i class="fas fa-map-location-dot me-2"></i>場所選び</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="etiquette-tab" data-bs-toggle="tab" data-bs-target="#etiquette-pane"
+                type="button" role="tab"><i class="fas fa-user-shield me-2"></i>マナー・安全</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="weather-guide-tab" data-bs-toggle="tab" data-bs-target="#weather-guide-pane"
+                type="button" role="tab"><i class="fas fa-cloud-sun me-2"></i>気象条件</button>
+        </li>
+        <li class="nav-item" role="presentation">
             <button class="nav-link" id="settings-tab" data-bs-toggle="tab" data-bs-target="#settings-pane"
                 type="button" role="tab"><i class="fas fa-cogs me-2"></i>設定の目安</button>
         </li>
@@ -37,23 +49,31 @@
         <div class="tab-pane fade show active" id="calc-pane" role="tabpanel" tabindex="0">
             <div class="card bg-dark text-white border-secondary shadow">
                 <div class="card-body p-4">
-                    <h2 class="h3 mb-4"><i class="fas fa-calculator text-primary me-2"></i>星を点に写す：500ルール計算機</h2>
+                    <h2 class="h3 mb-4"><i class="fas fa-calculator text-primary me-2"></i>星を点に写す：露出計算機</h2>
                     <p class="text-secondary small mb-4">
-                        星はゆっくりと動いているため、シャッタースピードが長すぎると線のように伸びてしまいます。星を点として写すための限界時間を計算します。</p>
+                        星はゆっくりと動いているため、シャッタースピードが長すぎると線のように伸びてしまいます。星を点として写すための限界時間を計算します（Nルール）。</p>
 
                     <div class="row g-3">
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <label for="focalLength" class="form-label">レンズの焦点距離 (mm)</label>
                             <input type="number" class="form-control bg-secondary text-white border-0" id="focalLength"
                                 placeholder="例: 14" value="24">
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <label for="sensorType" class="form-label">センサーサイズ</label>
                             <select class="form-select bg-secondary text-white border-0" id="sensorType">
                                 <option value="1">フルサイズ (1.0x)</option>
                                 <option value="1.5">APS-C (1.5x - Sony, Nikon, Fuji)</option>
                                 <option value="1.6">APS-C (1.6x - Canon)</option>
                                 <option value="2">マイクロフォーサーズ (2.0x)</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="ruleType" class="form-label">計算ルール</label>
+                            <select class="form-select bg-secondary text-white border-0" id="ruleType">
+                                <option value="200">200ルール (厳格)</option>
+                                <option value="300" selected>300ルール (標準)</option>
+                                <option value="500">500ルール (許容)</option>
                             </select>
                         </div>
                     </div>
@@ -137,6 +157,108 @@
                         <div class="mb-4">
                             <h4 class="text-info">4. 星が一番小さくなる位置を探す</h4>
                             <p>フォーカスリングをゆっくり回し、星の光の点が「最も小さく、ハッキリした点」になる場所を見つけます。それがピントの合った状態です。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. Location & Light Pollution -->
+        <div class="tab-pane fade" id="location-pane" role="tabpanel" tabindex="0">
+            <div class="card bg-dark text-white border-secondary shadow">
+                <div class="card-body p-4">
+                    <h2 class="h3 mb-4"><i class="fas fa-map-location-dot text-primary me-2"></i>最高の空を探す：場所選びと光害</h2>
+                    <p class="text-secondary mb-4">星を綺麗に撮るための最も重要な要素は「機材」ではなく「場所」です。</p>
+
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <h4 class="h5 text-primary">ボートル・スケール (Bortle Scale)</h4>
+                            <p class="small text-light">空の暗さを1〜9のランクで表す指標です。</p>
+                            <ul class="list-unstyled small">
+                                <li class="mb-2"><span class="badge bg-success me-2">Class 1-2</span>
+                                    最高の暗さ。天の川が影を作るほど明るく見えます。</li>
+                                <li class="mb-2"><span class="badge bg-info me-2">Class 3-4</span> 田舎の空。天の川の構造がはっきり見えます。
+                                </li>
+                                <li class="mb-2"><span class="badge bg-warning text-dark me-2">Class 5-6</span>
+                                    郊外の空。天の川はぼんやりと見えます。</li>
+                                <li class="mb-2"><span class="badge bg-danger me-2">Class 7-9</span> 都市部の空。明るい星しか見えません。
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h4 class="h5 text-primary">場所選びのポイント</h4>
+                            <div class="bg-black p-3 rounded border border-secondary mb-3">
+                                <ul class="mb-0 small">
+                                    <li><strong>光害マップを活用：</strong> 「Light Pollution Map」などのサイトで、青や黒のエリアを探しましょう。</li>
+                                    <li><strong>視界の開けた場所：</strong> 特に撮りたい対象（天の川など）がある方角が開けているか確認。</li>
+                                    <li><strong>標高が高い場所：</strong> 空気の色収差や霞が少なく、よりクリアに写ります。</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 6. Etiquette & Safety -->
+        <div class="tab-pane fade" id="etiquette-pane" role="tabpanel" tabindex="0">
+            <div class="card bg-dark text-white border-secondary shadow">
+                <div class="card-body p-4">
+                    <h2 class="h3 mb-4"><i class="fas fa-user-shield text-warning me-2"></i>撮影のマナーと安全</h2>
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <h4 class="h5 text-warning">暗闇でのマナー</h4>
+                            <ul class="small">
+                                <li class="mb-2"><strong>赤いライトの使用：</strong>
+                                    白い光は人間の目を眩ませ、撮影中の他人の写真にも台無しにします。赤いライトなら夜間視力を維持できます。</li>
+                                <li class="mb-2"><strong>スマホ画面に注意：</strong> スマホの画面も非常に明るいです。使うときは明るさを最小にするか、背を向けましょう。
+                                </li>
+                                <li class="mb-2"><strong>静かに過ごす：</strong> 星空スポットは閑静な場所が多いです。深夜の大きな話し声や車のエンジン音には配慮しましょう。
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h4 class="h5 text-warning">安全を守るために</h4>
+                            <div class="alert alert-warning bg-opacity-10 border-warning text-warning small">
+                                <i class="fas fa-exclamation-triangle me-2"></i><strong>注意：</strong> 夜間の撮影は危険を伴います。
+                                <ul class="mt-2 mb-0">
+                                    <li>家族や友人に目的地を伝えておく。</li>
+                                    <li>防寒対策は「やりすぎ」なくらいが丁度いい（夜は急冷します）。</li>
+                                    <li>野生動物（クマ、イノシシなど）への対策を。</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 7. Weather Conditions -->
+        <div class="tab-pane fade" id="weather-guide-pane" role="tabpanel" tabindex="0">
+            <div class="card bg-dark text-white border-secondary shadow">
+                <div class="card-body p-4">
+                    <h2 class="h3 mb-4"><i class="fas fa-cloud-sun text-info me-2"></i>気象条件のチェック</h2>
+                    <div class="row g-4">
+                        <div class="col-md-4">
+                            <div class="text-center mb-3">
+                                <i class="fas fa-cloud fa-3x text-secondary mb-2"></i>
+                                <h5 class="text-info">雲量</h5>
+                            </div>
+                            <p class="small text-muted">当然ですが、快晴がベスト。低層・中層・高層の雲の状態を詳しく見られる予報サイト（SCWなど）が便利です。</p>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="text-center mb-3">
+                                <i class="fas fa-droplet fa-3x text-primary mb-2"></i>
+                                <h5 class="text-info">湿度と夜露</h5>
+                            </div>
+                            <p class="small text-muted">湿度が高いとレンズが曇ります。レンズヒーターや、使い捨てカイロを巻き付ける対策が必須になることがあります。</p>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="text-center mb-3">
+                                <i class="fas fa-wind fa-3x text-warning mb-2"></i>
+                                <h5 class="text-info">風の影響</h5>
+                            </div>
+                            <p class="small text-muted">長秒露光では、わずかな風でも三脚が揺れて星がブレます。風の強い日は三脚を低くく、重しを付けるなどの工夫が必要です。</p>
                         </div>
                     </div>
                 </div>
@@ -259,15 +381,17 @@
     document.addEventListener('DOMContentLoaded', function () {
         const focalInput = document.getElementById('focalLength');
         const sensorSelect = document.getElementById('sensorType');
+        const ruleSelect = document.getElementById('ruleType');
         const resultDisplay = document.getElementById('calcResult');
 
         function calculateExposure() {
             const focalLength = parseFloat(focalInput.value);
             const cropFactor = parseFloat(sensorSelect.value);
+            const ruleValue = parseFloat(ruleSelect.value);
 
             if (focalLength > 0) {
-                // 500 Rule: Shutter Speed = 500 / (Focal Length * Crop Factor)
-                const limit = 500 / (focalLength * cropFactor);
+                // N Rule: Shutter Speed = Rule / (Focal Length * Crop Factor)
+                const limit = ruleValue / (focalLength * cropFactor);
                 resultDisplay.innerText = Math.floor(limit);
             } else {
                 resultDisplay.innerText = '-';
@@ -276,6 +400,7 @@
 
         focalInput.addEventListener('input', calculateExposure);
         sensorSelect.addEventListener('change', calculateExposure);
+        ruleSelect.addEventListener('change', calculateExposure);
 
         // Initial calculation
         calculateExposure();

@@ -8,7 +8,49 @@ moon_bp = Blueprint('moon', __name__)
 def moon():
     prefectures = load_prefectures()
     today = get_today()
-    return render_template('moon.html', prefectures=prefectures, today=today, meta_description="各都道府県の月の出、月の入り、月齢を検索。あなただけの夜空のリズムを調べましょう。")
+    pref_location = request.cookies.get('pref_location', '大阪(大阪府)')
+    
+    # Get moon data for today
+    selected_date = today
+    selected_date_parts = selected_date.split('-')
+    year = int(selected_date_parts[0])
+    month = int(selected_date_parts[1])
+    day = int(selected_date_parts[2])
+
+    from database import get_moon_db
+    conn = get_moon_db()
+    cursor = conn.cursor()
+    cursor.execute('''
+        SELECT moon_rise, moon_set, moon_age FROM moon_data 
+        WHERE prefecture = ? AND year = ? AND month = ? AND day = ?
+    ''', (pref_location, year, month, day))
+    row = cursor.fetchone()
+
+    moon_data = None
+    moon_image = "moon_00.png"
+
+    if row:
+        moon_data = {
+            '月の出': row[0],
+            '月の入': row[1],
+            '月齢': row[2]
+        }
+        moon_image = moon_get_moon_images(moon_data['月齢'])
+
+    # Weather info for today
+    from models.weather import get_weather_info
+    weather_info = get_weather_info(pref_location, selected_date)
+
+    return render_template(
+        'moon_calendar.html',
+        moon_image=moon_image,
+        prefectures=prefectures,
+        prefecture=pref_location,
+        selected_date=selected_date,
+        moon_data=moon_data,
+        weather_info=weather_info,
+        meta_description=f"{pref_location}の{selected_date}の月の出・月の入り・月齢情報と気象予測です。"
+    )
 
 @moon_bp.route('/moon_calendar', methods=['POST'])
 def moon_calendar():

@@ -10,7 +10,10 @@ __pycache__/
 
 # 例：Pythonの仮想環境の場合
 .venv/
-venv/
 
 # 例：Node.jsの場合
 node_modules/
+
+# 環境変数
+.env
+.env.example
