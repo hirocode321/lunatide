@@ -17,3 +17,10 @@ node_modules/
 # 環境変数
 .env
 .env.example
+
+# データベース (例外的に無視)
+*.db
+
+# OS・ログ
+.DS_Store
+*.log

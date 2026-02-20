@@ -41,6 +41,10 @@ def moon():
     from models.weather import get_weather_info
     weather_info = get_weather_info(pref_location, selected_date)
 
+    # Sun & Twilight info
+    from models.astro_calc import get_sun_events
+    sun_events = get_sun_events(pref_location, selected_date)
+
     return render_template(
         'moon_calendar.html',
         moon_image=moon_image,
@@ -49,6 +53,7 @@ def moon():
         selected_date=selected_date,
         moon_data=moon_data,
         weather_info=weather_info,
+        sun_events=sun_events,
         meta_description=f"{pref_location}の{selected_date}の月の出・月の入り・月齢情報と気象予測です。"
     )
 
@@ -89,6 +94,10 @@ def moon_calendar():
     from models.weather import get_weather_info
     weather_info = get_weather_info(prefecture, selected_date)
 
+    # Sun & Twilight info
+    from models.astro_calc import get_sun_events
+    sun_events = get_sun_events(prefecture, selected_date)
+
     return render_template(
         'moon_calendar.html',
         moon_image=moon_image,
@@ -97,5 +106,6 @@ def moon_calendar():
         selected_date=selected_date,
         moon_data=moon_data,
         weather_info=weather_info,
+        sun_events=sun_events,
         meta_description=f"{prefecture}の{selected_date}の月の出・月の入り・月齢情報と気象予測です。"
     )

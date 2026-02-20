@@ -269,6 +269,10 @@ def moon_detail(year, month, day):
     # Weather Info for the specific day (Preferred Location)
     weather_info = get_weather_info(pref_location, f"{year}-{month:02d}-{day:02d}")
 
+    # Sun & Twilight info
+    from models.astro_calc import get_sun_events
+    sun_events = get_sun_events(pref_location, f"{year}-{month:02d}-{day:02d}")
+
     # conn.close()
 
     return render_template(
@@ -283,6 +287,7 @@ def moon_detail(year, month, day):
         prev_date=prev_date,
         next_date=next_date,
         weather_info=weather_info,
+        sun_events=sun_events,
         pref_location=pref_location,
         all_prefectures=all_prefectures
     )

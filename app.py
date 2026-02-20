@@ -11,6 +11,8 @@ from routes.tide import tide_bp
 from routes.astro import astro_bp
 from routes.admin import admin_bp
 from routes.guide import guide_bp
+from routes.iss import iss_bp
+from routes.spots import spots_bp
 
 app = Flask(__name__)
 
@@ -32,6 +34,8 @@ app.register_blueprint(tide_bp)
 app.register_blueprint(astro_bp)
 app.register_blueprint(admin_bp)
 app.register_blueprint(guide_bp)
+app.register_blueprint(iss_bp)
+app.register_blueprint(spots_bp)
 
 @app.errorhandler(404)
 def page_not_found(e):

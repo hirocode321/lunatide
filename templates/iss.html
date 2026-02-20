@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+
+{% block title %}ISS (国際宇宙ステーション) 通過予測 - LunaTide{% endblock %}
+
+{% block content %}
+<div class="container my-5 fade-in">
+    <div class="text-center mb-5">
+        <h1 class="display-5 fw-bold"><i class="fas fa-satellite text-info me-3"></i>ISS 通過予測</h1>
+        <p class="text-secondary lead">あなたの街の上空を通過する、国際宇宙ステーションを見上げよう</p>
+    </div>
+
+    <!-- Location Selector -->
+    <div class="row justify-content-center mb-5">
+        <div class="col-md-6 col-lg-4">
+            <div class="card bg-dark border-secondary shadow">
+                <div class="card-body p-4 text-center">
+                    <h5 class="card-title text-light mb-3">観測ポイントを設定</h5>
+                    <form action="{{ url_for('main.set_location') }}" method="POST">
+                        <input type="hidden" name="next" value="{{ request.path }}">
+                        <select name="prefecture" class="form-select bg-secondary text-white border-0 mb-3"
+                            onchange="this.form.submit()">
+                            {% for pref in all_prefectures %}
+                            <option value="{{ pref }}" {% if pref==pref_location %}selected{% endif %}>{{ pref }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </form>
+                    <div class="small text-muted">
+                        <i class="fas fa-info-circle me-1"></i>現在地: <strong class="text-info">{{ pref_location
+                            }}</strong> の予測を表示しています
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Passes Table -->
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            {% if passes %}
+            <div class="card bg-dark border-0 shadow-lg overflow-hidden">
+                <div class="table-responsive">
+                    <table class="table table-dark table-hover mb-0 align-middle">
+                        <thead class="bg-black text-secondary">
+                            <tr>
+                                <th scope="col" class="py-3 px-4">日付</th>
+                                <th scope="col" class="py-3">見えやすさ</th>
+                                <th scope="col" class="py-3">見え始め</th>
+                                <th scope="col" class="py-3">最大仰角</th>
+                                <th scope="col" class="py-3">見え終わり</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for p in passes %}
+                            <tr {% if p.rating_val> 45 %}class="table-active"{% endif %}>
+                                <td class="px-4 py-3 fw-bold">{{ p.date }}</td>
+                                <td class="py-3 text-warning fs-5">
+                                    {{ p.rating }}
+                                    {% if p.rating_val > 45 %}
+                                    <span class="badge bg-danger ms-2"
+                                        style="font-size: 0.6rem; vertical-align: middle;">好条件</span>
+                                    {% endif %}
+                                </td>
+                                <td class="py-3 font-monospace">{{ p.start_time }}</td>
+                                <td class="py-3">
+                                    <div class="font-monospace text-info">{{ p.max_alt }}</div>
+                                    <div class="small text-muted">{{ p.max_alt_time }}</div>
+                                </td>
+                                <td class="py-3 font-monospace">{{ p.end_time }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="mt-4 p-4 bg-black rounded border border-secondary text-secondary small">
+                <h5 class="text-light h6 mb-2"><i class="fas fa-lightbulb text-warning me-2"></i>ISS観測のコツ</h5>
+                <ul class="mb-0 ps-3">
+                    <li class="mb-1">ISSは星のように明るく輝きながら、飛行機よりも速いスピードで空を横切ります。</li>
+                    <li class="mb-1"><strong>最大仰角</strong>が大きいほど空の高い位置を通過するため、街明かりや建物の影響を受けにくく見やすくなります。</li>
+                    <li class="mb-1">点滅せずにスーッと動く光があれば、それがISSです！</li>
+                </ul>
+            </div>
+            {% else %}
+            <div class="alert alert-secondary bg-dark text-white border-secondary text-center p-5" role="alert">
+                <i class="fas fa-satellite fa-3x text-secondary mb-3"></i>
+                <h4 class="alert-heading">直近の通過予定はありません</h4>
+                <p class="mb-0">向こう1週間、{{ pref_location }}で好条件で観測できるISSの通過は予測されていません。<br>数日後に再度チェックしてみてください。</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

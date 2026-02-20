@@ -83,6 +83,24 @@
                         <div class="display-2 fw-bold text-primary" id="calcResult">21</div>
                         <p class="text-light mt-2">秒 以下</p>
                     </div>
+
+                    <hr class="border-secondary my-4">
+
+                    <h3 class="h5 text-info mb-3"><i class="fas fa-save me-2"></i>マイ機材プロファイル</h3>
+                    <div class="bg-secondary bg-opacity-10 p-3 rounded border border-secondary">
+                        <div class="mb-3">
+                            <label for="profileNotes" class="form-label small text-muted">機材メモ・プリセット設定 (例: ISO 3200,
+                                F2.8)</label>
+                            <textarea class="form-control bg-dark text-white border-secondary" id="profileNotes"
+                                rows="2" placeholder="自分のよく使う設定やカメラ・レンズ名をメモしておけます"></textarea>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <button id="saveProfileBtn" class="btn btn-outline-primary btn-sm px-4 rounded-pill"><i
+                                    class="fas fa-check me-2"></i>この設定を保存</button>
+                            <span id="saveStatus" class="text-success small fw-bold" style="display: none;"><i
+                                    class="fas fa-check-circle me-1"></i>保存しました！</span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -384,6 +402,10 @@
         const ruleSelect = document.getElementById('ruleType');
         const resultDisplay = document.getElementById('calcResult');
 
+        const profileNotes = document.getElementById('profileNotes');
+        const saveProfileBtn = document.getElementById('saveProfileBtn');
+        const saveStatus = document.getElementById('saveStatus');
+
         function calculateExposure() {
             const focalLength = parseFloat(focalInput.value);
             const cropFactor = parseFloat(sensorSelect.value);
@@ -398,11 +420,36 @@
             }
         }
 
+        // Load profile from localStorage
+        function loadProfile() {
+            const savedFocal = localStorage.getItem('lunaTideFocalLength');
+            const savedSensor = localStorage.getItem('lunaTideSensorType');
+            const savedRule = localStorage.getItem('lunaTideRuleType');
+            const savedNotes = localStorage.getItem('lunaTideProfileNotes');
+
+            if (savedFocal) focalInput.value = savedFocal;
+            if (savedSensor) sensorSelect.value = savedSensor;
+            if (savedRule) ruleSelect.value = savedRule;
+            if (savedNotes) profileNotes.value = savedNotes;
+        }
+
+        // Save profile to localStorage
+        saveProfileBtn.addEventListener('click', function () {
+            localStorage.setItem('lunaTideFocalLength', focalInput.value);
+            localStorage.setItem('lunaTideSensorType', sensorSelect.value);
+            localStorage.setItem('lunaTideRuleType', ruleSelect.value);
+            localStorage.setItem('lunaTideProfileNotes', profileNotes.value);
+
+            saveStatus.style.display = 'inline';
+            setTimeout(() => { saveStatus.style.display = 'none'; }, 2000);
+        });
+
         focalInput.addEventListener('input', calculateExposure);
         sensorSelect.addEventListener('change', calculateExposure);
         ruleSelect.addEventListener('change', calculateExposure);
 
-        // Initial calculation
+        // Initial process
+        loadProfile();
         calculateExposure();
     });
 </script>
