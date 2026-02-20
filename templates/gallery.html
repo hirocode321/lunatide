@@ -1,0 +1,273 @@
+{% extends 'base.html' %}
+
+{% block title %}ギャラリー＆ログ - Astro Navigator{% endblock %}
+
+{% block content %}
+<div class="container my-5 fade-in">
+    <div class="row mb-5 align-items-center">
+        <div class="col-md-8">
+            <h1 class="display-5 fw-bold mb-3"><i class="fas fa-images text-primary me-3"></i>ギャラリー＆ログ</h1>
+            <p class="text-secondary lead">
+                撮影した天体写真を記録し、振り返ることができます。アップロードした写真には自動的にその日の月齢と天気が記録されます。
+            </p>
+        </div>
+        <div class="col-md-4 text-md-end">
+            <!-- アップロードボタン (Modal Trigger) -->
+            <button type="button" class="btn btn-primary btn-lg rounded-pill px-4 shadow-sm" data-bs-toggle="modal"
+                data-bs-target="#uploadModal">
+                <i class="fas fa-cloud-upload-alt me-2"></i>写真をアップロード
+            </button>
+        </div>
+    </div>
+
+    <!-- Alert Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    {% for category, message in messages %}
+    <div class="alert alert-{{ category }} alert-dismissible fade show shadow-sm" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endfor %}
+    {% endif %}
+    {% endwith %}
+
+    <!-- Photo Grid -->
+    {% if photos %}
+    <div class="row g-4" data-masonry='{"percentPosition": true }'>
+        {% for photo in photos %}
+        <div class="col-sm-6 col-lg-4 mb-4">
+            <div class="card bg-dark border-secondary h-100 shadow-sm photo-card hover-lift overflow-hidden">
+                <a href="#" data-bs-toggle="modal" data-bs-target="#photoModal{{ photo.id }}"
+                    class="d-block overflow-hidden position-relative">
+                    <img src="{{ url_for('static', filename='uploads/gallery/' ~ photo.filename) }}"
+                        class="card-img-top photo-img" alt="Uploaded Photo" loading="lazy">
+                    <div class="photo-overlay d-flex align-items-center justify-content-center">
+                        <i class="fas fa-search-plus text-white fa-2x"></i>
+                    </div>
+                </a>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <small class="text-primary font-monospace"><i class="far fa-calendar-alt me-1"></i>{{
+                            photo.shoot_date }}</small>
+                        <span class="badge bg-secondary"><i class="fas fa-map-marker-alt me-1"></i>{{
+                            photo.location.split('(')[0] if photo.location else '不明' }}</span>
+                    </div>
+
+                    {% if photo.description %}
+                    <p class="card-text text-light small mb-3">{{ photo.description[:60] }}{% if
+                        photo.description|length > 60 %}...{% endif %}</p>
+                    {% endif %}
+
+                    <div class="d-flex gap-2 mb-3">
+                        {% if photo.moon_age and photo.moon_age != '-' %}
+                        <span class="badge border border-secondary text-light bg-dark" title="月齢: {{ photo.moon_age }}">
+                            <img src="{{ url_for('static', filename=photo.moon_image) }}" alt="Moon"
+                                style="width:16px; height:16px;" class="me-1">
+                            {{ photo.moon_age }}
+                        </span>
+                        {% endif %}
+                        {% if photo.weather and photo.weather != '-' %}
+                        <span class="badge border border-info text-info bg-dark"><i
+                                class="fas fa-cloud text-info me-1"></i>{{ photo.weather }}</span>
+                        {% endif %}
+                    </div>
+
+                    {% if photo.equipment %}
+                    <small class="text-muted d-block mb-3"><i class="fas fa-camera me-1"></i>{{ photo.equipment
+                        }}</small>
+                    {% endif %}
+                </div>
+                <!-- Delete Button Container -->
+                <div class="card-footer bg-transparent border-top border-secondary text-end p-2">
+                    <form action="{{ url_for('gallery.delete', photo_id=photo.id) }}" method="POST"
+                        onsubmit="return confirm('本当にこの写真を削除しますか？');" class="d-inline">
+                        <button type="submit" class="btn btn-sm btn-outline-danger border-0"><i
+                                class="fas fa-trash-alt"></i></button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Lightbox Modal -->
+        <div class="modal fade" id="photoModal{{ photo.id }}" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-xl modal-dialog-centered">
+                <div class="modal-content bg-dark border-secondary shadow-lg">
+                    <div class="modal-header border-bottom border-secondary">
+                        <h5 class="modal-title font-monospace text-primary">{{ photo.shoot_date }} @ {{ photo.location
+                            }}</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                            aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body p-0 text-center bg-black">
+                        <img src="{{ url_for('static', filename='uploads/gallery/' ~ photo.filename) }}"
+                            class="img-fluid max-vh-75" alt="Large Photo">
+                    </div>
+                    <div
+                        class="modal-footer border-top border-secondary d-flex justify-content-between align-items-start text-start p-4">
+                        <div class="w-75">
+                            <h6 class="text-white mb-2">キャプション</h6>
+                            <p class="text-light">{{ photo.description or '（キャプションなし）' }}</p>
+
+                            <h6 class="text-white mt-4 mb-2">撮影情報・条件</h6>
+                            <ul class="list-unstyled text-secondary small grid-two-col mb-0">
+                                <li><i class="fas fa-camera text-primary me-2"></i>機材: <span class="text-light">{{
+                                        photo.equipment or '-' }}</span></li>
+                                <li><i class="fas fa-map-marker-alt text-primary me-2"></i>場所: <span
+                                        class="text-light">{{ photo.location or '-' }}</span></li>
+                                <li><i class="fas fa-cloud text-info me-2"></i>天気: <span class="text-light">{{
+                                        photo.weather or '-' }}</span></li>
+                                <li><i class="fas fa-moon text-warning me-2"></i>月齢: <span class="text-light">{{
+                                        photo.moon_age or '-' }}</span></li>
+                                <li><i class="far fa-clock text-secondary me-2"></i>登録日時: <span class="text-light">{{
+                                        photo.created_at }}</span></li>
+                            </ul>
+                        </div>
+                        <div class="w-25 text-end">
+                            <form action="{{ url_for('gallery.delete', photo_id=photo.id) }}" method="POST"
+                                onsubmit="return confirm('本当に削除しますか？');">
+                                <button type="submit" class="btn btn-outline-danger"><i
+                                        class="fas fa-trash-alt me-2"></i>削除</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <!-- Empty State -->
+    <div class="text-center p-5 bg-dark border-secondary rounded-4 my-5 border-dashed">
+        <div class="text-secondary mb-4" style="font-size: 4rem;">
+            <i class="fas fa-images"></i>
+        </div>
+        <h3 class="h4 text-white mb-3">まだ写真がありません</h3>
+        <p class="text-secondary mb-4">初めての天体写真をアップロードして、自分だけの星空ログを作りましょう。</p>
+        <button type="button" class="btn btn-primary px-4 rounded-pill" data-bs-toggle="modal"
+            data-bs-target="#uploadModal">
+            写真をアップロード
+        </button>
+    </div>
+    {% endif %}
+
+</div>
+
+<!-- Upload Modal -->
+<div class="modal fade" id="uploadModal" tabindex="-1" aria-labelledby="uploadModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark border-secondary shadow-lg">
+            <div class="modal-header border-bottom border-secondary">
+                <h5 class="modal-title" id="uploadModalLabel"><i
+                        class="fas fa-cloud-upload-alt text-primary me-2"></i>新規ログ登録</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                    aria-label="Close"></button>
+            </div>
+            <form action="{{ url_for('gallery.upload') }}" method="POST" enctype="multipart/form-data">
+                <div class="modal-body p-4">
+                    <!-- File Input -->
+                    <div class="mb-4">
+                        <label for="photo" class="form-label text-light">写真を選択 <span
+                                class="text-danger">*</span></label>
+                        <input class="form-control bg-dark text-white border-secondary" type="file" id="photo"
+                            name="photo" accept="image/png, image/jpeg, image/gif, image/webp" required>
+                        <div class="form-text text-secondary small mt-2">JPEG, PNG, GIF, WebP形式 (最大 5MB 程度推奨)</div>
+                    </div>
+
+                    <!-- Metadata Inputs -->
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label for="shoot_date" class="form-label text-light">撮影日 <span
+                                    class="text-danger">*</span></label>
+                            <input type="date" class="form-control bg-dark text-white border-secondary" id="shoot_date"
+                                name="shoot_date" required value="{{ today }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="location" class="form-label text-light">撮影地 (都道府県)</label>
+                            <select class="form-select bg-dark text-white border-secondary" id="location"
+                                name="location">
+                                <!-- We will render prefectures here, relying on cookie for default -->
+                                {% for pref in prefectures %}
+                                <option value="{{ pref }}" {% if pref==pref_location %}selected{% endif %}>{{ pref }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="equipment" class="form-label text-light">使用機材 (カメラ・レンズなど)</label>
+                        <input type="text" class="form-control bg-dark text-white border-secondary" id="equipment"
+                            name="equipment" placeholder="例: SONY a7III + 14mm F1.8 GM">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="description" class="form-label text-light">キャプション</label>
+                        <textarea class="form-control bg-dark text-white border-secondary" id="description"
+                            name="description" rows="3" placeholder="撮影時の感想や設定（ISO3200, 15秒など）"></textarea>
+                    </div>
+
+                    <div class="alert alert-info bg-opacity-10 border-info mt-4 p-3 d-flex align-items-center">
+                        <i class="fas fa-info-circle fa-2x text-info me-3"></i>
+                        <div class="small text-light">
+                            撮影日と場所をもとに、<strong>天気</strong>と<strong>月齢</strong>が自動的に付与されます。
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-top border-secondary">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">キャンセル</button>
+                    <button type="submit" class="btn btn-primary px-4"><i class="fas fa-upload me-2"></i>アップロード</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Custom Gallery Styles */
+    .border-dashed {
+        border: 2px dashed #495057 !important;
+    }
+
+    .photo-img {
+        height: 250px;
+        object-fit: cover;
+        transition: transform 0.5s ease;
+    }
+
+    .photo-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .photo-card:hover .photo-img {
+        transform: scale(1.05);
+    }
+
+    .photo-card:hover .photo-overlay {
+        opacity: 1;
+    }
+
+    .grid-two-col {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.5rem;
+    }
+
+    .max-vh-75 {
+        max-height: 75vh;
+    }
+</style>
+
+<!-- Add Masonry.js for staggered grid layout -->
+<script src="https://cdn.jsdelivr.net/npm/masonry-layout@4.2.2/dist/masonry.pkgd.min.js"
+    integrity="sha384-GNFwBvfVxBkLMJpYMOABq3c+d3KnQxudP/mGPkzpZSTYykLBNsZEnG2D9G/X/+7D" crossorigin="anonymous"
+    async></script>
+
+{% endblock %}

@@ -1,6 +1,7 @@
 import requests
 from datetime import datetime
 import json
+import sqlite3
 
 # 47都道府県の庁舎所在地（代表点）の座標
 PREFECTURE_COORDS = {
@@ -178,7 +179,6 @@ def get_weather_info(prefecture, date_str):
                 }
 
                 # 3. キャッシュの更新
-                import sqlite3 # ensure imported for Error handling if needed
                 try:
                     cursor.execute('''
                         INSERT INTO weather_cache (prefecture, date_str, data_json, updated_at)

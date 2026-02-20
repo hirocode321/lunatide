@@ -13,6 +13,7 @@ from routes.admin import admin_bp
 from routes.guide import guide_bp
 from routes.iss import iss_bp
 from routes.spots import spots_bp
+from routes.gallery import gallery_bp
 
 app = Flask(__name__)
 
@@ -36,6 +37,7 @@ app.register_blueprint(admin_bp)
 app.register_blueprint(guide_bp)
 app.register_blueprint(iss_bp)
 app.register_blueprint(spots_bp)
+app.register_blueprint(gallery_bp)
 
 @app.errorhandler(404)
 def page_not_found(e):
@@ -44,6 +46,16 @@ def page_not_found(e):
 @app.errorhandler(500)
 def internal_server_error(e):
     return render_template('500.html'), 500
+
+@app.context_processor
+def inject_prefectures():
+    from flask import request
+    from models.functions import load_prefectures, get_today
+    return {
+        'prefectures': load_prefectures(),
+        'pref_location': request.cookies.get('pref_location', '大阪(大阪府)'),
+        'today': get_today()
+    }
 
 @app.teardown_appcontext
 def close_connection(exception):

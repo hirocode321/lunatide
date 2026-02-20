@@ -129,5 +129,20 @@ def init_db():
         )
     ''')
 
+    # photo_logs テーブル
+    cursor_moon.execute('''
+        CREATE TABLE IF NOT EXISTS photo_logs (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            filename TEXT NOT NULL,
+            description TEXT,
+            equipment TEXT,
+            shoot_date TEXT NOT NULL,
+            location TEXT,
+            moon_age TEXT,
+            weather TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+
     conn_moon.commit()
     conn_moon.close()
