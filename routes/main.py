@@ -21,30 +21,13 @@ def index():
     cal = calendar.Calendar()
     days_in_month = list(cal.itermonthdays2(year, month))
 
-    # データベースからの読み込み
-    from database import get_moon_db
-    conn = get_moon_db()
-    cursor = conn.cursor()
-    
-    # データの有無を確認
-    cursor.execute("SELECT COUNT(*) FROM moon_data WHERE year = ?", (year,))
-    if cursor.fetchone()[0] == 0:
-        # データがない場合は、データがある最新の年（または2026年）にリダイレクト
-        cursor.execute("SELECT MAX(year) FROM moon_data")
-        available_year = cursor.fetchone()[0] or 2026
-        return redirect(url_for('main.index', year=available_year, month=month))
-
     # User Preferred Location (Default: 大阪(大阪府))
     pref_location = request.cookies.get('pref_location', '大阪(大阪府)')
     all_prefectures = load_prefectures()
 
-    # Get data for the selected location
-    cursor.execute('''
-        SELECT day, moon_age, moon_rise FROM moon_data 
-        WHERE prefecture = ? AND year = ? AND month = ?
-    ''', (pref_location, year, month))
-    db_data = {row[0]: {'age': row[1], 'rise': row[2]} for row in cursor.fetchall()}
-    # conn.close()
+    # Get data for the selected location dynamically
+    from models.astro_calc import get_moon_data_month
+    db_data = get_moon_data_month(pref_location, year, month)
 
     moon_images = []
     moon_ages = []
@@ -114,12 +97,10 @@ def index():
     if today.day in db_data and year == today.year and month == today.month:
         today_moon_age = db_data[today.day]['age']
     else:
-        # Fetch for today specifically if not in current view
-        cursor.execute("SELECT moon_age FROM moon_data WHERE prefecture = ? AND year = ? AND month = ? AND day = ?", 
-                      (pref_location, today.year, today.month, today.day))
-        res = cursor.fetchone()
-        if res:
-            today_moon_age = res[0]
+        from models.astro_calc import get_moon_data
+        today_info = get_moon_data(pref_location, f"{today.year}-{today.month:02d}-{today.day:02d}")
+        if today_info and today_info['moon_age'] != '-':
+            today_moon_age = today_info['moon_age']
             
     if today_moon_age is not None:
         try:
@@ -222,72 +203,4 @@ def sitemap():
 
 @main_bp.route('/moon/<int:year>/<int:month>/<int:day>')
 def moon_detail(year, month, day):
-    try:
-        current_date = date(year, month, day)
-    except ValueError:
-        abort(404)
-
-    # 前日・翌日の計算
-    prev_date = current_date - timedelta(days=1)
-    next_date = current_date + timedelta(days=1)
-
-    # 月齢データの取得
-    from database import get_moon_db
-    conn = get_moon_db()
-    cursor = conn.cursor()
-    cursor.execute('''
-        SELECT moon_age FROM moon_data 
-        WHERE prefecture = '大阪(大阪府)' AND year = ? AND month = ? AND day = ?
-    ''', (year, month, day))
-    result = cursor.fetchone()
-    
-    if not result:
-        # データがない場合は404
-        abort(404)
-        
-    moon_age = result[0]
-    moon_image = index_get_moon_images(moon_age) if moon_age is not None else None
-    moon_name = get_moon_name(moon_age) if moon_age is not None else None
-
-    # イベントデータの取得
-    conn.row_factory = sqlite3.Row
-    cursor = conn.cursor() # re-cursor for row factory
-    # iso_date start filtering for that day
-    target_iso_start = f"{year}-{month:02d}-{day:02d}"
-    # 簡易的に文字列一致で探す (ISOフォーマット前提: YYYY-MM-DD...)
-    events = cursor.execute('''
-        SELECT * FROM astro_events 
-        WHERE iso_date LIKE ? 
-        ORDER BY iso_date
-    ''', (f"{target_iso_start}%",)).fetchall()
-    
-    
-    # User Preferred Location
-    pref_location = request.cookies.get('pref_location', '大阪(大阪府)')
-    all_prefectures = load_prefectures()
-
-    # Weather Info for the specific day (Preferred Location)
-    weather_info = get_weather_info(pref_location, f"{year}-{month:02d}-{day:02d}")
-
-    # Sun & Twilight info
-    from models.astro_calc import get_sun_events
-    sun_events = get_sun_events(pref_location, f"{year}-{month:02d}-{day:02d}")
-
-    # conn.close()
-
-    return render_template(
-        'moon_detail.html',
-        year=year,
-        month=month,
-        day=day,
-        moon_age=moon_age,
-        moon_image=moon_image,
-        moon_name=moon_name,
-        events=events,
-        prev_date=prev_date,
-        next_date=next_date,
-        weather_info=weather_info,
-        sun_events=sun_events,
-        pref_location=pref_location,
-        all_prefectures=all_prefectures
-    )
+    return redirect(url_for('moon.moon', date=f"{year}-{month:02d}-{day:02d}"))

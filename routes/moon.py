@@ -7,7 +7,7 @@ moon_bp = Blueprint('moon', __name__)
 @moon_bp.route('/moon')
 def moon():
     prefectures = load_prefectures()
-    today = get_today()
+    today = request.args.get('date', get_today())
     pref_location = request.cookies.get('pref_location', '大阪(大阪府)')
     
     # Get moon data for today
@@ -17,23 +17,17 @@ def moon():
     month = int(selected_date_parts[1])
     day = int(selected_date_parts[2])
 
-    from database import get_moon_db
-    conn = get_moon_db()
-    cursor = conn.cursor()
-    cursor.execute('''
-        SELECT moon_rise, moon_set, moon_age FROM moon_data 
-        WHERE prefecture = ? AND year = ? AND month = ? AND day = ?
-    ''', (pref_location, year, month, day))
-    row = cursor.fetchone()
-
+    from models.astro_calc import get_moon_data
+    moon_info = get_moon_data(pref_location, selected_date)
+    
     moon_data = None
     moon_image = "moon_00.png"
-
-    if row:
+    
+    if moon_info and moon_info['moon_age'] != '-':
         moon_data = {
-            '月の出': row[0],
-            '月の入': row[1],
-            '月齢': row[2]
+            '月の出': moon_info['moon_rise'],
+            '月の入': moon_info['moon_set'],
+            '月齢': moon_info['moon_age']
         }
         moon_image = moon_get_moon_images(moon_data['月齢'])
 
@@ -68,25 +62,17 @@ def moon_calendar():
     day = int(selected_date_parts[2])
 
     # データベースからの読み込み
-    # データベースからの読み込み
-    from database import get_moon_db
-    conn = get_moon_db()
-    cursor = conn.cursor()
-    cursor.execute('''
-        SELECT moon_rise, moon_set, moon_age FROM moon_data 
-        WHERE prefecture = ? AND year = ? AND month = ? AND day = ?
-    ''', (prefecture, year, month, day))
-    row = cursor.fetchone()
-    # conn.close()
+    from models.astro_calc import get_moon_data
+    moon_info = get_moon_data(prefecture, selected_date)
 
     moon_data = None
     moon_image = "moon_00.png"
 
-    if row:
+    if moon_info and moon_info['moon_age'] != '-':
         moon_data = {
-            '月の出': row[0],
-            '月の入': row[1],
-            '月齢': row[2]
+            '月の出': moon_info['moon_rise'],
+            '月の入': moon_info['moon_set'],
+            '月齢': moon_info['moon_age']
         }
         moon_image = moon_get_moon_images(moon_data['月齢'])
 

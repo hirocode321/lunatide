@@ -116,3 +116,96 @@ def get_sun_events(prefecture_name, date_str):
         
     return res
 
+def get_moon_data(prefecture_name, date_str):
+    """Calculate Moon age, moonrise, and moonset for a single day."""
+    if prefecture_name not in PREF_COORDS:
+        prefecture_name = "東京(東京都)"
+        
+    lat, lon = PREF_COORDS[prefecture_name]
+    location = wgs84.latlon(lat, lon)
+    
+    try:
+        dt = datetime.strptime(date_str, '%Y-%m-%d')
+    except ValueError:
+        return {'moon_age': '-', 'moon_rise': '-', 'moon_set': '-'}
+        
+    t0 = ts.from_datetime(dt.replace(hour=0, minute=0, second=0, tzinfo=tz))
+    t1 = ts.from_datetime((dt + timedelta(days=1)).replace(hour=0, minute=0, second=0, tzinfo=tz))
+    
+    # Calculate risings and settings
+    f = almanac.risings_and_settings(eph, eph['moon'], location)
+    times, events = almanac.find_discrete(t0, t1, f)
+    
+    moon_rise = '-'
+    moon_set = '-'
+    
+    for t, event in zip(times, events):
+        time_str = t.astimezone(tz).strftime('%H:%M')
+        if event == 1:
+            moon_rise = time_str
+        elif event == 0:
+            moon_set = time_str
+            
+    # Calculate moon age at 12:00 PM JST
+    dt_noon = dt.replace(hour=12, minute=0, second=0, tzinfo=tz)
+    t_noon = ts.from_datetime(dt_noon)
+    phase_degrees = almanac.moon_phase(eph, t_noon).degrees
+    # Convert degrees (0-360) to days (0-29.53)
+    # Synodic month is approx 29.530588 days
+    age = (phase_degrees / 360.0) * 29.530588
+    
+    return {
+        'moon_age': f"{age:.1f}",
+        'moon_rise': moon_rise,
+        'moon_set': moon_set
+    }
+
+def get_moon_data_month(prefecture_name, year, month):
+    """Calculate Moon data for the entire month to be used in calendars."""
+    import calendar
+    
+    if prefecture_name not in PREF_COORDS:
+        prefecture_name = "東京(東京都)"
+        
+    lat, lon = PREF_COORDS[prefecture_name]
+    location = wgs84.latlon(lat, lon)
+    
+    _, days_in_month = calendar.monthrange(year, month)
+    
+    # Find all risings and settings in the month
+    dt_start = datetime(year, month, 1, tzinfo=tz)
+    dt_end = (dt_start + timedelta(days=days_in_month)).replace(day=1) # 1st of next month
+    
+    t0 = ts.from_datetime(dt_start)
+    t1 = ts.from_datetime(dt_end)
+    
+    f = almanac.risings_and_settings(eph, eph['moon'], location)
+    times, events = almanac.find_discrete(t0, t1, f)
+    
+    # Pre-calculate moon phases for every day at 12:00 PM JST using an array
+    noons = [datetime(year, month, d, 12, 0, 0, tzinfo=tz) for d in range(1, days_in_month + 1)]
+    t_noons = ts.from_datetimes(noons)
+    phases = almanac.moon_phase(eph, t_noons).degrees
+    
+    # Initialize result dictionary for 1..days_in_month
+    month_data = {}
+    for d in range(1, days_in_month + 1):
+        age_val = (phases[d-1] / 360.0) * 29.530588
+        month_data[d] = {
+            'age': f"{age_val:.1f}",
+            'rise': '-',
+            'set': '-'
+        }
+        
+    # Attribute the events to the appropriate day
+    for t, event in zip(times, events):
+        local_t = t.astimezone(tz)
+        if local_t.month == month and local_t.year == year:
+            day = local_t.day
+            time_str = local_t.strftime('%H:%M')
+            if event == 1:
+                month_data[day]['rise'] = time_str
+            elif event == 0:
+                month_data[day]['set'] = time_str
+                
+    return month_data

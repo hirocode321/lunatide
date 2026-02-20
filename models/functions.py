@@ -95,20 +95,6 @@ def init_db():
     conn_moon = sqlite3.connect('moon_data.db')
     cursor_moon = conn_moon.cursor()
 
-    # moon_data テーブル
-    cursor_moon.execute('''
-        CREATE TABLE IF NOT EXISTS moon_data (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            prefecture TEXT,
-            month INTEGER,
-            day INTEGER,
-            moon_rise TEXT,
-            moon_set TEXT,
-            moon_age TEXT,
-            year INTEGER
-        )
-    ''')
-
     # astro_events テーブル
     cursor_moon.execute('''
         CREATE TABLE IF NOT EXISTS astro_events (
