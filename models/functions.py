@@ -131,5 +131,17 @@ def init_db():
         )
     ''')
 
+    # weather_cache テーブル
+    cursor_moon.execute('''
+        CREATE TABLE IF NOT EXISTS weather_cache (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            prefecture TEXT NOT NULL,
+            date_str TEXT NOT NULL,
+            data_json TEXT NOT NULL,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(prefecture, date_str)
+        )
+    ''')
+
     conn_moon.commit()
     conn_moon.close()

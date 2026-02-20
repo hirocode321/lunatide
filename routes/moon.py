@@ -43,6 +43,10 @@ def moon_calendar():
         }
         moon_image = moon_get_moon_images(moon_data['月齢'])
 
+    # 気象情報の取得
+    from models.weather import get_weather_info
+    weather_info = get_weather_info(prefecture, selected_date)
+
     return render_template(
         'moon_calendar.html',
         moon_image=moon_image,
@@ -50,5 +54,6 @@ def moon_calendar():
         prefecture=prefecture,
         selected_date=selected_date,
         moon_data=moon_data,
-        meta_description=f"{prefecture}の{selected_date}の月の出・月の入り・月齢情報です。"
+        weather_info=weather_info,
+        meta_description=f"{prefecture}の{selected_date}の月の出・月の入り・月齢情報と気象予測です。"
     )

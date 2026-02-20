@@ -17,6 +17,51 @@
         <p><strong>月の出:</strong> {{ moon_data['月の出'] }}</p>
         <p><strong>月の入:</strong> {{ moon_data['月の入'] }}</p>
     </div>
+
+    <!-- 気象情報セクション -->
+    {% if weather_info %}
+    <div class="row justify-content-center my-4">
+        <div class="col-md-6">
+            <div class="card bg-dark text-white border-secondary shadow-sm">
+                <div class="card-header border-secondary bg-transparent">
+                    <h5 class="card-title mb-0"><i class="{{ weather_info.icon_class }} me-2"></i>観測ポイント予測 ({{
+                        weather_info.time }})</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                            <p class="mb-1 text-muted small">天気概況</p>
+                            <h4 class="mb-0">{{ weather_info.condition }}</h4>
+                        </div>
+                        <div class="text-end">
+                            <p class="mb-1 text-muted small">雲量</p>
+                            <h4 class="mb-0">{{ weather_info.cloud_cover }}%</h4>
+                        </div>
+                    </div>
+
+                    <div class="mt-4">
+                        <p class="mb-2 small">星空指数</p>
+                        <div class="d-flex align-items-center">
+                            <div class="flex-grow-1 me-3">
+                                <div class="progress" style="height: 10px; background-color: #333;">
+                                    {% set score_pct = weather_info.starry_index %}
+                                    <div class="progress-bar {% if score_pct >= 80 %}bg-success{% elif score_pct >= 50 %}bg-info{% elif score_pct >= 30 %}bg-warning{% else %}bg-danger{% endif %}"
+                                        role="progressbar" style="width: {{ score_pct }}%"
+                                        aria-valuenow="{{ score_pct }}" aria-valuemin="0" aria-valuemax="100"></div>
+                                </div>
+                            </div>
+                            <span
+                                class="badge {% if score_pct >= 80 %}bg-success{% elif score_pct >= 50 %}bg-info{% elif score_pct >= 30 %}bg-warning{% else %}bg-danger{% endif %} rounded-pill">
+                                指数: {{ score_pct }}%
+                            </span>
+                        </div>
+                        <p class="mt-2 mb-0 small text-muted">※21時時点の予測データに基づいています。0に近いほど雲が多く、観測に不向きです。</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
     {% else %}
     <p class="text-center">情報が見つかりませんでした。再度選択してください。</p>
     {% endif %}

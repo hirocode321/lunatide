@@ -7,8 +7,18 @@
     <div class="text-center mb-4">
         <h1 class="display-5 font-weight-bold">{{ year }}年{{ month }}月</h1>
         <p class="text-secondary">月齢と星々が織りなす、今月のリズム</p>
-        <div class="small text-muted mb-4">
-            <i class="fas fa-location-dot me-1"></i>観測地点: 大阪
+        <div class="small text-muted mb-4 d-flex justify-content-center align-items-center">
+            <i class="fas fa-location-dot me-2"></i>
+            <form action="{{ url_for('main.set_location') }}" method="POST" class="d-inline-block">
+                <input type="hidden" name="next" value="{{ request.path }}">
+                <select name="prefecture"
+                    class="form-select form-select-sm border-0 bg-transparent text-primary fw-bold"
+                    style="cursor: pointer; padding-left: 0; box-shadow: none;" onchange="this.form.submit()">
+                    {% for pref in all_prefectures %}
+                    <option value="{{ pref }}" {% if pref==pref_location %}selected{% endif %}>{{ pref }}</option>
+                    {% endfor %}
+                </select>
+            </form>
         </div>
     </div>
 
@@ -28,7 +38,7 @@
             {% endif %}
 
             {% if recommendation %}
-            <div class="card border-0 shadow-lg {{ recommendation.bg_class or 'bg-light text-dark' }}"
+            <div class="card border-0 shadow-lg {{ recommendation.bg_class or 'bg-light text-dark' }} mb-4"
                 style="background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05)); border: 1px solid rgba(255,255,255,0.1) !important;">
                 <div class="card-body d-flex align-items-center p-4">
                     <div class="display-4 me-4" style="filter: drop-shadow(0 0 10px currentColor); opacity: 0.9;"><i
@@ -49,6 +59,62 @@
                             <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="far fa-star"></i><i
                                 class="far fa-star"></i><i class="far fa-star"></i>
                             {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- 気象情報セクション -->
+            {% if weather_info %}
+            <div class="card bg-dark text-white border-secondary shadow-sm mb-5">
+                <div class="card-header border-secondary bg-transparent">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0"><i class="{{ weather_info.icon_class }} me-2"></i>観測ポイント予測 ({{
+                            weather_info.time
+                            }})</h5>
+                        <form action="{{ url_for('main.set_location') }}" method="POST"
+                            class="d-flex align-items-center">
+                            <input type="hidden" name="next" value="{{ request.path }}">
+                            <select name="prefecture"
+                                class="form-select form-select-sm bg-dark text-white border-secondary me-2"
+                                style="width: auto;" onchange="this.form.submit()">
+                                {% for pref in all_prefectures %}
+                                <option value="{{ pref }}" {% if pref==pref_location %}selected{% endif %}>{{ pref }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </form>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                            <p class="mb-1 text-muted small">天気概況</p>
+                            <h4 class="mb-0">{{ weather_info.condition }}</h4>
+                        </div>
+                        <div class="text-end">
+                            <p class="mb-1 text-muted small">雲量</p>
+                            <h4 class="mb-0">{{ weather_info.cloud_cover }}%</h4>
+                        </div>
+                    </div>
+
+                    <div>
+                        <p class="mb-2 small text-muted">星空指数</p>
+                        <div class="d-flex align-items-center">
+                            <div class="flex-grow-1 me-3">
+                                <div class="progress" style="height: 10px; background-color: #333;">
+                                    {% set score_pct = weather_info.starry_index %}
+                                    <div class="progress-bar {% if score_pct >= 80 %}bg-success{% elif score_pct >= 50 %}bg-info{% elif score_pct >= 30 %}bg-warning{% else %}bg-danger{% endif %}"
+                                        role="progressbar" style="width: {{ score_pct }}%"
+                                        aria-valuenow="{{ score_pct }}" aria-valuemin="0" aria-valuemax="100">
+                                    </div>
+                                </div>
+                            </div>
+                            <span
+                                class="badge {% if score_pct >= 80 %}bg-success{% elif score_pct >= 50 %}bg-info{% elif score_pct >= 30 %}bg-warning{% else %}bg-danger{% endif %} rounded-pill">
+                                指数: {{ score_pct }}%
+                            </span>
                         </div>
                     </div>
                 </div>
@@ -95,6 +161,11 @@
                     <img src="{{ url_for('static', filename=moon_images[loop.index0]) }}" alt="Moon Phase"
                         class="moon-img-sm">
                     <div class="moon-age-text d-none d-md-block">{{ moon_ages[loop.index0] }}</div>
+                    {% if moon_rises[loop.index0] %}
+                    <div class="text-secondary mt-1" style="font-size: 0.75rem;">
+                        <i class="fas fa-arrow-up fa-xs"></i> {{ moon_rises[loop.index0] }}
+                    </div>
+                    {% endif %}
                     {% else %}
                     <div style="height: 32px;"></div>
                     {% endif %}

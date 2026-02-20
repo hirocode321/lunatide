@@ -2,7 +2,8 @@ from flask import Blueprint, render_template, request, make_response, url_for, a
 from datetime import datetime, date, timedelta
 import calendar
 import sqlite3
-from models.functions import index_get_moon_images, get_moon_name
+from models.functions import index_get_moon_images, get_moon_name, load_prefectures
+from models.weather import get_weather_info
 from database import get_moon_db
 
 main_bp = Blueprint('main', __name__)
@@ -33,28 +34,36 @@ def index():
         available_year = cursor.fetchone()[0] or 2026
         return redirect(url_for('main.index', year=available_year, month=month))
 
-    # 大阪のデータ(月齢は全国共通として扱う)
+    # User Preferred Location (Default: 大阪(大阪府))
+    pref_location = request.cookies.get('pref_location', '大阪(大阪府)')
+    all_prefectures = load_prefectures()
+
+    # Get data for the selected location
     cursor.execute('''
-        SELECT day, moon_age FROM moon_data 
-        WHERE prefecture = '大阪(大阪府)' AND year = ? AND month = ?
-    ''', (year, month))
-    db_data = {row[0]: row[1] for row in cursor.fetchall()}
+        SELECT day, moon_age, moon_rise FROM moon_data 
+        WHERE prefecture = ? AND year = ? AND month = ?
+    ''', (pref_location, year, month))
+    db_data = {row[0]: {'age': row[1], 'rise': row[2]} for row in cursor.fetchall()}
     # conn.close()
 
     moon_images = []
     moon_ages = []
     moon_names = []
+    moon_rises = []
 
     for day, weekday in days_in_month:
         if day > 0 and day in db_data:
-            moon_age = db_data[day]
+            moon_age = db_data[day]['age']
+            moon_rise = db_data[day]['rise']
             moon_ages.append(moon_age)
             moon_images.append(index_get_moon_images(moon_age))
             moon_names.append(get_moon_name(moon_age))
+            moon_rises.append(moon_rise)
         else:
             moon_ages.append(None)
             moon_images.append(None)
             moon_names.append(None)
+            moon_rises.append(None)
 
     # Photography Potential Logic (Best when moon is small)
     photo_potential = []
@@ -103,11 +112,11 @@ def index():
     
     today_moon_age = None
     if today.day in db_data and year == today.year and month == today.month:
-        today_moon_age = db_data[today.day]
+        today_moon_age = db_data[today.day]['age']
     else:
         # Fetch for today specifically if not in current view
-        cursor.execute("SELECT moon_age FROM moon_data WHERE prefecture = '大阪(大阪府)' AND year = ? AND month = ? AND day = ?", 
-                      (today.year, today.month, today.day))
+        cursor.execute("SELECT moon_age FROM moon_data WHERE prefecture = ? AND year = ? AND month = ? AND day = ?", 
+                      (pref_location, today.year, today.month, today.day))
         res = cursor.fetchone()
         if res:
             today_moon_age = res[0]
@@ -133,6 +142,9 @@ def index():
     tomorrow_iso_start = tomorrow.strftime("%Y-%m-%d")
     tomorrow_event = c.execute("SELECT * FROM astro_events WHERE iso_date LIKE ? ORDER BY is_important DESC LIMIT 1", (f"{tomorrow_iso_start}%",)).fetchone()
 
+    # Weather Info for Today (Preferred Location)
+    weather_info = get_weather_info(pref_location, today.strftime('%Y-%m-%d'))
+
     next_month = month + 1 if month < 12 else 1
     next_year = year if month < 12 else year + 1
     prev_month = month - 1 if month > 1 else 12
@@ -147,6 +159,7 @@ def index():
         moon_ages=moon_ages,
         moon_images=moon_images,
         moon_names=moon_names,
+        moon_rises=moon_rises,
         next_month=next_month,
         next_year=next_year,
         prev_month=prev_month,
@@ -156,8 +169,22 @@ def index():
         recommendation=recommendation,
         tomorrow_event=tomorrow_event,
         photo_potential=photo_potential,
+        weather_info=weather_info,
+        pref_location=pref_location,
+        all_prefectures=all_prefectures,
         meta_description=f"{year}年{month}月の月齢カレンダー。今日の月の満ち欠けや、注目の天体イベントをチェックして、夜空を楽しもう。"
     )
+
+@main_bp.route('/set_location', methods=['POST'])
+def set_location():
+    prefecture = request.form.get('prefecture')
+    next_url = request.form.get('next', url_for('main.index'))
+    
+    response = make_response(redirect(next_url))
+    if prefecture:
+        # Save location in cookie for 365 days
+        response.set_cookie('pref_location', prefecture, max_age=365*24*60*60)
+    return response
 
 @main_bp.route('/privacy')
 def privacy():
@@ -235,6 +262,13 @@ def moon_detail(year, month, day):
     ''', (f"{target_iso_start}%",)).fetchall()
     
     
+    # User Preferred Location
+    pref_location = request.cookies.get('pref_location', '大阪(大阪府)')
+    all_prefectures = load_prefectures()
+
+    # Weather Info for the specific day (Preferred Location)
+    weather_info = get_weather_info(pref_location, f"{year}-{month:02d}-{day:02d}")
+
     # conn.close()
 
     return render_template(
@@ -247,5 +281,8 @@ def moon_detail(year, month, day):
         moon_name=moon_name,
         events=events,
         prev_date=prev_date,
-        next_date=next_date
+        next_date=next_date,
+        weather_info=weather_info,
+        pref_location=pref_location,
+        all_prefectures=all_prefectures
     )
