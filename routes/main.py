@@ -126,6 +126,10 @@ def index():
     # Weather Info for Today (Preferred Location)
     weather_info = get_weather_info(pref_location, today.strftime('%Y-%m-%d'))
 
+    # Timeline Events
+    from models.astro_calc import get_timeline_events
+    timeline_events = get_timeline_events(pref_location, today.strftime('%Y-%m-%d'))
+
     next_month = month + 1 if month < 12 else 1
     next_year = year if month < 12 else year + 1
     prev_month = month - 1 if month > 1 else 12
@@ -151,6 +155,7 @@ def index():
         tomorrow_event=tomorrow_event,
         photo_potential=photo_potential,
         weather_info=weather_info,
+        timeline_events=timeline_events,
         pref_location=pref_location,
         all_prefectures=all_prefectures,
         meta_description=f"{year}年{month}月の月齢カレンダー。今日の月の満ち欠けや、注目の天体イベントをチェックして、夜空を楽しもう。"

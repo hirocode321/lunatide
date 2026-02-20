@@ -209,3 +209,74 @@ def get_moon_data_month(prefecture_name, year, month):
                 month_data[day]['set'] = time_str
                 
     return month_data
+
+def get_timeline_events(prefecture_name, date_str):
+    """Combine sun, twilight, moon, and ISS events into a chronologically sorted timeline."""
+    sun_data = get_sun_events(prefecture_name, date_str)
+    moon_data = get_moon_data(prefecture_name, date_str)
+    
+    events = []
+    
+    def add_event(time_str, label, ev_type, icon):
+        if time_str and time_str != '-':
+            events.append({'time': time_str, 'label': label, 'type': ev_type, 'icon': icon})
+            
+    if sun_data:
+        add_event(sun_data.get('sunset'), '日没', 'twilight', 'fas fa-sun text-warning')
+        add_event(sun_data.get('astro_dusk'), '天文薄明終了 (完全な夜の始まり)', 'night_start', 'fas fa-star text-light')
+        add_event(sun_data.get('astro_dawn'), '天文薄明開始 (夜明けの始まり)', 'night_end', 'fas fa-star-half-alt text-light')
+        add_event(sun_data.get('sunrise'), '日の出', 'twilight', 'fas fa-sun text-warning')
+        
+    if moon_data:
+        add_event(moon_data.get('moon_rise'), '月の出', 'moon', 'fas fa-moon text-warning')
+        add_event(moon_data.get('moon_set'), '月の入', 'moon_off', 'fas fa-moon text-secondary')
+        
+    lat, lon = PREF_COORDS.get(prefecture_name, PREF_COORDS["東京(東京都)"])
+    location = wgs84.latlon(lat, lon)
+    
+    try:
+        dt = datetime.strptime(date_str, '%Y-%m-%d')
+    except ValueError:
+        pass
+    else:
+        stations_url = 'http://celestrak.org/NORAD/elements/stations.txt'
+        try:
+            satellites = load.tle_file(stations_url)
+            by_name = {sat.name: sat for sat in satellites}
+            iss_sat = by_name.get('ISS (ZARYA)')
+            if iss_sat:
+                t0 = ts.from_datetime(dt.replace(hour=0, minute=0, second=0, tzinfo=tz))
+                t1 = ts.from_datetime((dt + timedelta(days=1)).replace(hour=0, minute=0, second=0, tzinfo=tz))
+                t, evs = iss_sat.find_events(location, t0, t1, altitude_degrees=10.0)
+                
+                iss_passes = []
+                current_pass = None
+                for ti, event in zip(t, evs):
+                    is_sunlit = iss_sat.at(ti).is_sunlit(eph)
+                    obs_phase = almanac.dark_twilight_day(eph, location)(ti).item()
+                    is_dark = (obs_phase < 3)
+                    is_visible = bool(is_sunlit and is_dark)
+                    
+                    if event == 0:
+                        current_pass = {'start': ti.astimezone(tz), 'visible': is_visible}
+                    elif event == 1 and current_pass:
+                        alt, az, distance = (iss_sat - location).at(ti).altaz()
+                        current_pass['max_alt'] = int(alt.degrees)
+                        current_pass['visible'] = current_pass['visible'] or is_visible
+                    elif event == 2 and current_pass:
+                        current_pass['visible'] = current_pass['visible'] or is_visible
+                        if current_pass['visible']:
+                            iss_passes.append(current_pass)
+                        current_pass = None
+                        
+                for p in iss_passes:
+                    if p.get('max_alt', 0) > 20: 
+                        time_str = p['start'].strftime('%H:%M')
+                        add_event(time_str, f"ISS通過 (最大高度 {p['max_alt']}°)", 'iss', 'fas fa-satellite text-info')
+        except Exception as e:
+            print("ISS Error in timeline:", e)
+            
+    events.sort(key=lambda x: x['time'])
+    
+    # Optional: Calculate dark/light duration block if needed
+    return events
