@@ -62,8 +62,16 @@
                         <li class="nav-item">
                             <a class="nav-link" href="{{ url_for('iss.iss') }}">ISS予測</a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('spots.spots') }}">マップ</a>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMaps" role="button"
+                                data-bs-toggle="dropdown" aria-expanded="false">
+                                撮影地マップ
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="navbarDropdownMaps">
+                                <li><a class="dropdown-item" href="{{ url_for('spots.spots') }}">観測スポット（光害マップ）</a></li>
+                                <li><a class="dropdown-item"
+                                        href="{{ url_for('sea_spots.sea_spots') }}">海辺の撮影地（干満マップ）</a></li>
+                            </ul>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link text-warning" href="{{ url_for('gallery.index') }}"><i

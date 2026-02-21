@@ -17,8 +17,8 @@ def index():
     # 当日の日付
     today = date.today()
 
-    # 月の日数と月初の曜日を計算
-    cal = calendar.Calendar()
+    # 月の日数と月初の曜日を計算 (日曜日始まりに設定)
+    cal = calendar.Calendar(firstweekday=6)
     days_in_month = list(cal.itermonthdays2(year, month))
 
     # User Preferred Location (Default: 大阪(大阪府))

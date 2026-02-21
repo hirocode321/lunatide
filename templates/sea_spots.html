@@ -1,0 +1,370 @@
+{% extends "base.html" %}
+
+{% block title %}海辺の撮影地と干満マップ - LunaTide{% endblock %}
+
+{% block content %}
+<!-- Leaflet CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+
+<style>
+    #map {
+        height: 65vh;
+        width: 100%;
+        border-radius: 15px;
+        border: 2px solid #3d5afe;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+        cursor: crosshair;
+    }
+
+    .leaflet-popup-content-wrapper {
+        background-color: #1a1f26;
+        color: #fff;
+        border-radius: 10px;
+    }
+
+    .leaflet-popup-tip {
+        background-color: #1a1f26;
+    }
+
+    .spot-card {
+        transition: transform 0.2s;
+        cursor: pointer;
+    }
+
+    .spot-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 5px 15px rgba(61, 90, 254, 0.3) !important;
+    }
+</style>
+
+<div class="container my-5 fade-in">
+    <div class="row mb-4 align-items-center">
+        <div class="col-md-8">
+            <h1 class="display-5 fw-bold"><i class="fas fa-water text-primary me-3"></i>海辺の撮影地マップ</h1>
+            <p class="text-secondary lead">海辺の撮影に大事な「干満（潮の満ち引き）」をチェック。好きな場所をクリックして撮影地を登録できます。</p>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-5">
+        <div class="col-lg-8">
+            <div id="map" class="position-relative z-0"></div>
+            <div class="mt-3 text-secondary small text-center">
+                <i class="fas fa-mouse-pointer me-1"></i>地図上の任意の場所をクリックすると、その場所を新しいスポットとして登録できます。
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="d-flex justify-content-between align-items-center border-bottom border-secondary pb-2 mb-3">
+                <h3 class="h5 mb-0">登録スポット一覧</h3>
+                <div class="input-group input-group-sm w-50">
+                    <span class="input-group-text bg-secondary border-0 text-light"><i class="fas fa-search"></i></span>
+                    <input type="text" id="spotSearch" class="form-control bg-dark text-white border-0"
+                        placeholder="スポット検索...">
+                </div>
+            </div>
+            <div class="spots-list overflow-auto" id="spotsSidebarList" style="max-height: 65vh; padding-right: 5px;">
+                {% if not spots %}
+                <p class="text-secondary small">まだスポットが登録されていません。地図をクリックして追加してください。</p>
+                {% endif %}
+
+                {% for spot in spots %}
+                <div class="card bg-dark border-secondary mb-3 spot-card"
+                    onclick="panToSpot({{ spot.lat }}, {{ spot.lng }}, {{ spot.id }})">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h5 class="card-title text-light mb-0">
+                                <i class="fas fa-map-marker-alt text-info me-2"></i>{{ spot.name }}
+                            </h5>
+                        </div>
+                        <p class="card-text text-secondary small mb-2">{{ spot.note }}</p>
+                        <div class="d-flex justify-content-between align-items-center mt-2">
+                            <button class="btn btn-sm btn-outline-primary rounded-pill py-0"
+                                onclick="showTideModal({{ spot.id }}, '{{ spot.name }}'); event.stopPropagation();">
+                                <i class="fas fa-chart-line me-1"></i>干満グラフ
+                            </button>
+                            <span class="text-muted" style="font-size: 0.7rem;"><i
+                                    class="fas fa-location-arrow me-1"></i>{{ "%.2f"|format(spot.lat) }}, {{
+                                "%.2f"|format(spot.lng) }}</span>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tide Graph Modal -->
+<div class="modal fade" id="tideModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered border-secondary shadow-lg">
+        <div class="modal-content bg-dark text-white">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title" id="tideModalTitle"><i class="fas fa-water text-primary me-2"></i>干満スケジュール</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                    aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <div class="d-flex justify-content-center align-items-center mb-3">
+                    <input type="date" id="tideDate" class="form-control bg-secondary text-white border-0 w-auto me-2"
+                        value="{{ today }}">
+                    <button class="btn btn-outline-light" onclick="fetchTideData()">グラフを更新</button>
+                </div>
+                <div id="tideLoading" class="my-4 d-none">
+                    <div class="spinner-border text-primary" role="status"></div>
+                    <p class="mt-2 text-secondary">潮汐データを取得中...</p>
+                </div>
+                <div id="tideError" class="alert alert-danger d-none">データを取得できませんでした。</div>
+                <img id="tideImage" src="" class="img-fluid rounded border border-secondary shadow"
+                    style="display:none;">
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Spot Modal -->
+<div class="modal fade" id="addSpotModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered border-secondary shadow-lg">
+        <div class="modal-content bg-dark text-white">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title"><i class="fas fa-map-marker-alt text-primary me-2"></i>スポットを新規登録</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                    aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addSpotForm">
+                    <div class="mb-3">
+                        <label class="form-label">スポット名 (必須)</label>
+                        <input type="text" id="spotName" class="form-control bg-secondary text-white border-0"
+                            placeholder="例: 三浦半島 〇〇海岸" required>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <label class="form-label">緯度 (Latitude)</label>
+                            <input type="text" id="spotLat" class="form-control bg-dark text-secondary border-0"
+                                readonly>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label">経度 (Longitude)</label>
+                            <input type="text" id="spotLng" class="form-control bg-dark text-secondary border-0"
+                                readonly>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">メモ・環境</label>
+                        <textarea id="spotNote" class="form-control bg-secondary text-white border-0" rows="3"
+                            placeholder="トイレの有無、駐車場の広さ、撮影条件など"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer border-secondary">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">キャンセル</button>
+                <button type="button" class="btn btn-primary" onclick="submitSpot()">登録する</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script>
+    // Initialize map, set view to central Japan
+    const map = L.map('map').setView([35.5, 138.0], 6);
+
+    // Dark theme map tiles
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
+        subdomains: 'abcd',
+        maxZoom: 20
+    }).addTo(map);
+
+    // Provide spots data from python
+    const spots = {{ spots | tojson }};
+    const markers = {};
+
+    // Custom wave icon
+    const waveIcon = L.divIcon({
+        html: '<i class="fas fa-water fa-lg text-primary" style="filter: drop-shadow(0 0 5px rgba(13,110,253,0.8));"></i>',
+        className: 'custom-leaflet-icon',
+        iconSize: [20, 20],
+        iconAnchor: [10, 10],
+        popupAnchor: [0, -10]
+    });
+
+    // Add markers
+    spots.forEach(spot => {
+        const marker = L.marker([spot.lat, spot.lng], { icon: waveIcon }).addTo(map);
+        marker.bindPopup(`
+            <div class="text-center p-1">
+                <h6 class="mb-2 fw-bold border-bottom border-secondary pb-1">${spot.name}</h6>
+                <button class="btn btn-sm btn-primary py-1 px-3 rounded-pill" onclick="showTideModal(${spot.id}, '${spot.name}')">
+                    <i class="fas fa-chart-line me-1"></i>干満を見る
+                </button>
+            </div>
+        `);
+        markers[spot.id] = marker;
+    });
+
+    // Function to pan to spot when card is clicked
+    window.panToSpot = function (lat, lng, id) {
+        map.flyTo([lat, lng], 10, { duration: 1.5 });
+        setTimeout(() => {
+            if (markers[id]) markers[id].openPopup();
+        }, 1500);
+    };
+
+    // Map click event for adding new spot
+    let tempMarker = null;
+    let addSpotModal = null;
+
+    document.addEventListener('DOMContentLoaded', function () {
+        addSpotModal = new bootstrap.Modal(document.getElementById('addSpotModal'));
+    });
+
+    map.on('click', function (e) {
+        if (tempMarker) map.removeLayer(tempMarker);
+
+        const lat = e.latlng.lat;
+        const lng = e.latlng.lng;
+
+        tempMarker = L.marker([lat, lng], {
+            icon: L.divIcon({
+                html: '<i class="fas fa-map-pin fa-2x text-warning pulse-anim"></i>',
+                className: 'custom-leaflet-icon',
+                iconAnchor: [12, 24]
+            })
+        }).addTo(map);
+
+        // Populate modal inputs
+        document.getElementById('spotLat').value = lat.toFixed(5);
+        document.getElementById('spotLng').value = lng.toFixed(5);
+        document.getElementById('spotName').value = '';
+        document.getElementById('spotNote').value = '';
+
+        if (addSpotModal) addSpotModal.show();
+    });
+
+    // Submit new spot
+    window.submitSpot = function () {
+        const name = document.getElementById('spotName').value.trim();
+        const lat = document.getElementById('spotLat').value;
+        const lng = document.getElementById('spotLng').value;
+        const note = document.getElementById('spotNote').value;
+
+        if (!name) {
+            alert('スポット名は必須です。');
+            return;
+        }
+
+        fetch("{{ url_for('sea_spots.add_spot') }}", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name, lat, lng, note })
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('エラー: ' + data.error);
+                }
+            })
+            .catch(err => alert("通信エラーが発生しました。"));
+    };
+
+    // Tide Modal Logic
+    let currentSpotId = null;
+    let tideModal = null;
+
+    window.showTideModal = function (spotId, spotName) {
+        if (!tideModal) {
+            tideModal = new bootstrap.Modal(document.getElementById('tideModal'));
+        }
+        currentSpotId = spotId;
+        document.getElementById('tideModalTitle').innerHTML = `<i class="fas fa-water text-primary me-2"></i>${spotName}の干満`;
+
+        // Close map popup if open
+        if (markers[spotId]) markers[spotId].closePopup();
+
+        tideModal.show();
+        fetchTideData();
+    };
+
+    window.fetchTideData = function () {
+        if (!currentSpotId) return;
+
+        const dateStr = document.getElementById('tideDate').value;
+        const imgEl = document.getElementById('tideImage');
+        const loadingEl = document.getElementById('tideLoading');
+        const errorEl = document.getElementById('tideError');
+
+        imgEl.style.display = 'none';
+        errorEl.classList.add('d-none');
+        loadingEl.classList.remove('d-none');
+
+        fetch(`/api/sea_spots/${currentSpotId}/tide?date=${dateStr}`)
+            .then(res => res.json())
+            .then(data => {
+                loadingEl.classList.add('d-none');
+                if (data.image_url) {
+                    imgEl.src = data.image_url;
+                    imgEl.style.display = 'block';
+                } else {
+                    errorEl.textContent = data.error || "データ取得失敗";
+                    errorEl.classList.remove('d-none');
+                }
+            })
+            .catch(err => {
+                loadingEl.classList.add('d-none');
+                errorEl.textContent = "通信エラー";
+                errorEl.classList.remove('d-none');
+            });
+    };
+
+    // Search Logic
+    document.getElementById('spotSearch').addEventListener('input', function (e) {
+        const query = e.target.value.toLowerCase().trim();
+        const cards = document.querySelectorAll('.spot-card');
+
+        cards.forEach(card => {
+            const name = card.getAttribute('data-name').toLowerCase();
+            const spotId = card.id.replace('spot-card-', '');
+
+            if (name.includes(query)) {
+                card.style.display = 'block';
+                if (markers[spotId] && !map.hasLayer(markers[spotId])) {
+                    markers[spotId].addTo(map);
+                }
+            } else {
+                card.style.display = 'none';
+                if (markers[spotId] && map.hasLayer(markers[spotId])) {
+                    map.removeLayer(markers[spotId]);
+                }
+            }
+        });
+    });
+</script>
+<style>
+    @keyframes pulse-anim {
+        0% {
+            transform: scale(1);
+            filter: drop-shadow(0 0 5px rgba(255, 193, 7, 0.8));
+        }
+
+        50% {
+            transform: scale(1.2);
+            filter: drop-shadow(0 0 15px rgba(255, 193, 7, 1));
+        }
+
+        100% {
+            transform: scale(1);
+            filter: drop-shadow(0 0 5px rgba(255, 193, 7, 0.8));
+        }
+    }
+
+    .pulse-anim {
+        animation: pulse-anim 1s infinite;
+    }
+</style>
+{% endblock %}

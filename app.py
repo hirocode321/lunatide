@@ -13,6 +13,7 @@ from routes.admin import admin_bp
 from routes.guide import guide_bp
 from routes.iss import iss_bp
 from routes.spots import spots_bp
+from routes.sea_spots import sea_spots_bp
 from routes.gallery import gallery_bp
 
 app = Flask(__name__)
@@ -37,6 +38,7 @@ app.register_blueprint(admin_bp)
 app.register_blueprint(guide_bp)
 app.register_blueprint(iss_bp)
 app.register_blueprint(spots_bp)
+app.register_blueprint(sea_spots_bp)
 app.register_blueprint(gallery_bp)
 
 @app.errorhandler(404)
@@ -64,6 +66,6 @@ def close_connection(exception):
 
 
 
-# if __name__ == '__main__':
-#     port = int(os.environ.get('PORT', 5000))
-#     app.run(host='0.0.0.0', port=port, debug=debug_mode)
+if __name__ == '__main__':
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port, debug=debug_mode)

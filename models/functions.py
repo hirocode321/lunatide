@@ -144,5 +144,31 @@ def init_db():
         )
     ''')
 
+    # users テーブル
+    cursor_moon.execute('''
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT UNIQUE NOT NULL,
+            password_hash TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+
+    # photo_spots テーブル
+    cursor_moon.execute('''
+        CREATE TABLE IF NOT EXISTS photo_spots (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER,
+            name TEXT NOT NULL,
+            latitude REAL NOT NULL,
+            longitude REAL NOT NULL,
+            nearest_port_id TEXT,
+            is_private BOOLEAN DEFAULT 0,
+            description TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users (id)
+        )
+    ''')
+
     conn_moon.commit()
     conn_moon.close()

@@ -178,7 +178,7 @@
     {% if day > 0 %}
     <div class="calendar-day 
                 {% if year == today.year and month == today.month and day == today.day %}day-today{% endif %}
-                {% if weekday == 0 %}text-danger{% elif weekday == 6 %}text-primary{% endif %}
+                {% if weekday == 6 %}text-danger{% elif weekday == 5 %}text-primary{% endif %}
                 {% if day in events_by_day and events_by_day[day].is_important %}border border-warning border-2 bg-warning bg-opacity-10{% endif %}"
         data-bs-toggle="tooltip" data-bs-placement="top"
         title="{% if day in events_by_day %}{{ events_by_day[day].title }}{% else %}月齢: {{ moon_ages[loop.index0] or '-' }}{% endif %}">
