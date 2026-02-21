@@ -155,7 +155,7 @@ def get_weather_info(prefecture, date_str):
         diff_days = (target_date - today).days
 
         if 0 <= diff_days <= 11:
-            url = f"https://api.open-meteo.com/v1/forecast?latitude={coords['lat']}&longitude={coords['lng']}&hourly=cloud_cover,weather_code&models=jma&start_date={date_str}&end_date={next_date_str}&timezone=Asia%2FTokyo"
+            url = f"https://api.open-meteo.com/v1/forecast?latitude={coords['lat']}&longitude={coords['lng']}&hourly=cloud_cover,weather_code&start_date={date_str}&end_date={next_date_str}&timezone=Asia%2FTokyo"
         elif diff_days < 0:
             url = f"https://archive-api.open-meteo.com/v1/archive?latitude={coords['lat']}&longitude={coords['lng']}&start_date={date_str}&end_date={next_date_str}&hourly=cloud_cover,weather_code&timezone=Asia%2FTokyo"
         else:
@@ -210,9 +210,11 @@ def get_weather_info(prefecture, date_str):
             # 推奨メッセージの作成
             suggestion = "今夜は観測が難しいかもしれません。"
             if best_index >= 80:
-                suggestion = f"今夜は {best_time.hour}時頃からが絶好のチャンスです！"
+                time_prefix = "深夜" if best_time.hour < 6 else "今夜"
+                suggestion = f"{time_prefix} {best_time.hour}時頃からが絶好のチャンスです！"
             elif best_index >= 50:
-                suggestion = f"今夜の狙い目は {best_time.hour}時頃です。"
+                time_prefix = "深夜" if best_time.hour < 6 else "今夜"
+                suggestion = f"{time_prefix}の狙い目は {best_time.hour}時頃です。"
             elif best_index > 0:
                 suggestion = f"{best_time.hour}時頃に雲の切れ間があるかもしれません。"
 
@@ -260,7 +262,7 @@ def get_weather_by_coords(lat, lng, date_str):
         diff_days = (target_date - today).days
 
         if 0 <= diff_days <= 11:
-            url = f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lng}&hourly=cloud_cover,weather_code&models=jma&start_date={date_str}&end_date={next_date_str}&timezone=Asia%2FTokyo"
+            url = f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lng}&hourly=cloud_cover,weather_code&start_date={date_str}&end_date={next_date_str}&timezone=Asia%2FTokyo"
         elif diff_days < 0:
             url = f"https://archive-api.open-meteo.com/v1/archive?latitude={lat}&longitude={lng}&start_date={date_str}&end_date={next_date_str}&hourly=cloud_cover,weather_code&timezone=Asia%2FTokyo"
         else:
@@ -303,9 +305,11 @@ def get_weather_by_coords(lat, lng, date_str):
 
             suggestion = "今夜は観測が難しいかもしれません。"
             if best_index >= 80:
-                suggestion = f"今夜は {best_time.hour}時頃からが絶好のチャンスです！"
+                time_prefix = "深夜" if best_time.hour < 6 else "今夜"
+                suggestion = f"{time_prefix} {best_time.hour}時頃からが絶好のチャンスです！"
             elif best_index >= 50:
-                suggestion = f"今夜の狙い目は {best_time.hour}時頃です。"
+                time_prefix = "深夜" if best_time.hour < 6 else "今夜"
+                suggestion = f"{time_prefix}の狙い目は {best_time.hour}時頃です。"
             elif best_index > 0:
                 suggestion = f"{best_time.hour}時頃に雲の切れ間があるかもしれません。"
 

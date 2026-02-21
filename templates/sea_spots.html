@@ -3,10 +3,6 @@
 {% block title %}海辺の撮影地と干満マップ - LunaTide{% endblock %}
 
 {% block content %}
-<!-- Leaflet CSS -->
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
-
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
 <style>
@@ -94,298 +90,293 @@
                 <h3 class="h5 mb-0">登録スポット一覧</h3>
                 <div class="input-group input-group-sm w-50">
                     <span class="input-group-text bg-secondary border-0 text-light"><i class="fas fa-search"></i></span>
-                    <div class="input-group input-group-sm w-50">
-                        <span class="input-group-text bg-secondary border-0 text-light"><i
-                                class="fas fa-search"></i></span>
-                        <input type="text" id="spotSearch" class="form-control bg-dark text-white border-0"
-                            placeholder="スポット名で検索...">
-                    </div>
+                    <input type="text" id="spotSearch" class="form-control bg-dark text-white border-0"
+                        placeholder="スポット名で検索...">
                 </div>
+            </div>
 
-                <!-- タグ絞り込み -->
-                <div class="mb-3 d-flex flex-wrap gap-2" id="tagFilterContainer">
-                    <span class="badge rounded-pill bg-primary border" style="cursor: pointer;"
-                        onclick="filterByTag('')">すべて</span>
-                    <span class="badge rounded-pill bg-dark border border-secondary text-secondary"
-                        style="cursor: pointer;" onclick="filterByTag('朝日')">#朝日</span>
-                    <span class="badge rounded-pill bg-dark border border-secondary text-secondary"
-                        style="cursor: pointer;" onclick="filterByTag('夕日')">#夕日</span>
-                    <span class="badge rounded-pill bg-dark border border-secondary text-secondary"
-                        style="cursor: pointer;" onclick="filterByTag('星空')">#星空</span>
-                    <span class="badge rounded-pill bg-dark border border-secondary text-secondary"
-                        style="cursor: pointer;" onclick="filterByTag('リフレクション')">#リフレクション</span>
-                    <span class="badge rounded-pill bg-dark border border-secondary text-secondary"
-                        style="cursor: pointer;" onclick="filterByTag('岩礁')">#岩礁</span>
-                    <span class="badge rounded-pill bg-dark border border-secondary text-secondary"
-                        style="cursor: pointer;" onclick="filterByTag('工場夜景')">#工場夜景</span>
-                </div>
+            <!-- タグ絞り込み -->
+            <div class="mb-3 d-flex flex-wrap gap-2" id="tagFilterContainer">
+                <span class="badge rounded-pill bg-primary border" style="cursor: pointer;"
+                    onclick="filterByTag('')">すべて</span>
+                <span class="badge rounded-pill bg-dark border border-secondary text-secondary" style="cursor: pointer;"
+                    onclick="filterByTag('朝日')">#朝日</span>
+                <span class="badge rounded-pill bg-dark border border-secondary text-secondary" style="cursor: pointer;"
+                    onclick="filterByTag('夕日')">#夕日</span>
+                <span class="badge rounded-pill bg-dark border border-secondary text-secondary" style="cursor: pointer;"
+                    onclick="filterByTag('星空')">#星空</span>
+                <span class="badge rounded-pill bg-dark border border-secondary text-secondary" style="cursor: pointer;"
+                    onclick="filterByTag('リフレクション')">#リフレクション</span>
+                <span class="badge rounded-pill bg-dark border border-secondary text-secondary" style="cursor: pointer;"
+                    onclick="filterByTag('岩礁')">#岩礁</span>
+                <span class="badge rounded-pill bg-dark border border-secondary text-secondary" style="cursor: pointer;"
+                    onclick="filterByTag('工場夜景')">#工場夜景</span>
+            </div>
 
-                <div class="spots-list overflow-auto" id="spotsSidebarList"
-                    style="max-height: 65vh; padding-right: 5px;">
-                    {% if not spots %}
-                    <p class="text-secondary small">まだスポットが登録されていません。地図をクリックして追加してください。</p>
-                    {% endif %}
+            <div class="spots-list overflow-auto" id="spotsSidebarList" style="max-height: 65vh; padding-right: 5px;">
+                {% if not spots %}
+                <p class="text-secondary small">まだスポットが登録されていません。地図をクリックして追加してください。</p>
+                {% endif %}
 
-                    {% for spot in spots %}
-                    <div class="card bg-dark border-secondary mb-3 spot-card"
-                        onclick="panToSpot({{ spot.lat }}, {{ spot.lng }}, {{ spot.id }})">
-                        <div class="card-body">
-                            {% if spot.image_filename %}
-                            <img src="{{ url_for('static', filename='uploads/sea_spots/' + spot.image_filename) }}"
-                                class="spot-image-thumbnail" alt="{{ spot.name }}">
+                {% for spot in spots %}
+                <div class="card bg-dark border-secondary mb-3 spot-card"
+                    onclick="panToSpot({{ spot.lat }}, {{ spot.lng }}, {{ spot.id }})">
+                    <div class="card-body">
+                        {% if spot.image_filename %}
+                        <img src="{{ url_for('static', filename='uploads/sea_spots/' + spot.image_filename) }}"
+                            class="spot-image-thumbnail" alt="{{ spot.name }}">
+                        {% endif %}
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h5 class="card-title text-light mb-0">
+                                <i class="fas fa-map-marker-alt text-info me-2"></i>{{ spot.name }}
+                            </h5>
+                        </div>
+
+                        {% if spot.tags %}
+                        <div class="mb-2">
+                            {% for tag in spot.tags.split(',') %}
+                            {% if tag.strip() %}
+                            <span class="spot-tag">#{{ tag.strip() }}</span>
                             {% endif %}
-                            <div class="d-flex justify-content-between align-items-start mb-2">
-                                <h5 class="card-title text-light mb-0">
-                                    <i class="fas fa-map-marker-alt text-info me-2"></i>{{ spot.name }}
-                                </h5>
-                            </div>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
 
-                            {% if spot.tags %}
-                            <div class="mb-2">
-                                {% for tag in spot.tags.split(',') %}
-                                {% if tag.strip() %}
-                                <span class="spot-tag">#{{ tag.strip() }}</span>
-                                {% endif %}
-                                {% endfor %}
+                        <p class="card-text text-secondary small mb-2">{{ spot.note }}</p>
+                        <hr class="border-secondary my-2">
+                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                            <div>
+                                <button class="btn btn-sm btn-outline-primary rounded-pill py-0"
+                                    onclick="showTideModal({{ spot.id }}, '{{ spot.name }}'); event.stopPropagation();">
+                                    <i class="fas fa-chart-line me-1"></i>干満
+                                </button>
+                                <a href="https://www.google.com/maps/dir/?api=1&destination={{ spot.lat }},{{ spot.lng }}"
+                                    target="_blank" class="btn btn-sm btn-outline-success rounded-pill py-0"
+                                    onclick="event.stopPropagation();">
+                                    <i class="fas fa-map-signs me-1"></i>経路
+                                </a>
                             </div>
-                            {% endif %}
-
-                            <p class="card-text text-secondary small mb-2">{{ spot.note }}</p>
-                            <hr class="border-secondary my-2">
-                            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-                                <div>
-                                    <button class="btn btn-sm btn-outline-primary rounded-pill py-0"
-                                        onclick="showTideModal({{ spot.id }}, '{{ spot.name }}'); event.stopPropagation();">
-                                        <i class="fas fa-chart-line me-1"></i>干満
-                                    </button>
-                                    <a href="https://www.google.com/maps/dir/?api=1&destination={{ spot.lat }},{{ spot.lng }}"
-                                        target="_blank" class="btn btn-sm btn-outline-success rounded-pill py-0"
-                                        onclick="event.stopPropagation();">
-                                        <i class="fas fa-map-signs me-1"></i>経路
-                                    </a>
-                                </div>
-                                <span class="text-muted" style="font-size: 0.7rem;"><i
-                                        class="fas fa-location-arrow me-1"></i>{{ "%.2f"|format(spot.lat) }}, {{
-                                    "%.2f"|format(spot.lng) }}</span>
-                            </div>
+                            <span class="text-muted" style="font-size: 0.7rem;"><i
+                                    class="fas fa-location-arrow me-1"></i>{{ "%.2f"|format(spot.lat) }}, {{
+                                "%.2f"|format(spot.lng) }}</span>
                         </div>
                     </div>
-                    {% endfor %}
                 </div>
+                {% endfor %}
             </div>
         </div>
     </div>
+</div>
 
-    <!-- Tide Graph Modal -->
-    <div class="modal fade" id="tideModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-lg modal-dialog-centered border-secondary shadow-lg">
-            <div class="modal-content bg-dark text-white">
-                <div class="modal-header border-secondary">
-                    <h5 class="modal-title" id="tideModalTitle"><i class="fas fa-water text-primary me-2"></i>干満スケジュール
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
-                        aria-label="Close"></button>
+<!-- Tide Graph Modal -->
+<div class="modal fade" id="tideModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered border-secondary shadow-lg">
+        <div class="modal-content bg-dark text-white">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title" id="tideModalTitle"><i class="fas fa-water text-primary me-2"></i>干満スケジュール
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                    aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <div class="d-flex justify-content-center align-items-center mb-3">
+                    <input type="date" id="tideDate" class="form-control bg-secondary text-white border-0 w-auto me-2"
+                        value="{{ today }}">
+                    <button class="btn btn-outline-light" onclick="fetchTideData()">情報を更新</button>
                 </div>
-                <div class="modal-body text-center">
-                    <div class="d-flex justify-content-center align-items-center mb-3">
-                        <input type="date" id="tideDate"
-                            class="form-control bg-secondary text-white border-0 w-auto me-2" value="{{ today }}">
-                        <button class="btn btn-outline-light" onclick="fetchTideData()">情報を更新</button>
-                    </div>
 
-                    <div id="tideLoading" class="my-4 d-none">
-                        <div class="spinner-border text-primary" role="status"></div>
-                        <p class="mt-2 text-secondary">データを取得中...</p>
-                    </div>
-                    <div id="tideError" class="alert alert-danger d-none">データを取得できませんでした。</div>
-
-                    <!-- 天気・天文情報エリア -->
-                    <div id="astroWeatherInfo" class="row g-2 mb-3 d-none text-start">
-                        <div class="col-6 col-md-3">
-                            <div class="p-2 border border-secondary rounded h-100 bg-secondary bg-opacity-25">
-                                <div class="text-secondary small mb-1"><i class="fas fa-cloud me-1"></i>21時の天気</div>
-                                <div class="fw-bold" id="awWeather">-</div>
-                            </div>
-                        </div>
-                        <div class="col-6 col-md-3">
-                            <div class="p-2 border border-secondary rounded h-100 bg-secondary bg-opacity-25">
-                                <div class="text-secondary small mb-1"><i class="fas fa-star me-1"></i>星空指数</div>
-                                <div class="fw-bold" id="awStarry">-</div>
-                            </div>
-                        </div>
-                        <div class="col-6 col-md-3">
-                            <div class="p-2 border border-secondary rounded h-100 bg-secondary bg-opacity-25">
-                                <div class="text-secondary small mb-1"><i class="fas fa-sun text-warning me-1"></i>日の出/入
-                                </div>
-                                <div class="small fw-bold" id="awSun">-</div>
-                            </div>
-                        </div>
-                        <div class="col-6 col-md-3">
-                            <div class="p-2 border border-secondary rounded h-100 bg-secondary bg-opacity-25">
-                                <div class="text-secondary small mb-1"><i class="fas fa-moon text-info me-1"></i>月の出/入
-                                </div>
-                                <div class="small fw-bold" id="awMoon">-</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 追加: 星空アドバイスと時系列表示 -->
-                    <div id="starryAdviceArea" class="mb-4 d-none text-start">
-                        <div class="p-3 rounded bg-opacity-10 bg-info border border-info border-opacity-25 mb-3">
-                            <p class="mb-0 fw-bold text-info small" id="starrySuggestion">
-                                <i class="fas fa-magic me-2"></i>--
-                            </p>
-                        </div>
-                        <button
-                            class="btn btn-sm btn-outline-secondary w-100 border-secondary border-opacity-50 text-light"
-                            type="button" data-bs-toggle="collapse" data-bs-target="#hourlyTideWeather"
-                            aria-expanded="false">
-                            <i class="fas fa-chevron-down me-1"></i> 今夜の時系列データ (指数変化) を見る
-                        </button>
-                        <div class="collapse mt-2" id="hourlyTideWeather">
-                            <div class="card card-body bg-dark border-secondary p-0 overflow-hidden"
-                                style="max-height: 250px; overflow-y: auto;">
-                                <div class="list-group list-group-flush" id="hourlyTideList">
-                                    <!-- JSで動的に追加 -->
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <img id="tideImage" src="" class="img-fluid rounded border border-secondary shadow"
-                        style="display:none; width: 100%;">
+                <div id="tideLoading" class="my-4 d-none">
+                    <div class="spinner-border text-primary" role="status"></div>
+                    <p class="mt-2 text-secondary">データを取得中...</p>
                 </div>
+                <div id="tideError" class="alert alert-danger d-none">データを取得できませんでした。</div>
+
+                <!-- 天気・天文情報エリア -->
+                <div id="astroWeatherInfo" class="row g-2 mb-3 d-none text-start">
+                    <div class="col-6 col-md-3">
+                        <div class="p-2 border border-secondary rounded h-100 bg-secondary bg-opacity-25">
+                            <div class="text-secondary small mb-1"><i class="fas fa-cloud me-1"></i>21時の天気</div>
+                            <div class="fw-bold" id="awWeather">-</div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="p-2 border border-secondary rounded h-100 bg-secondary bg-opacity-25">
+                            <div class="text-secondary small mb-1"><i class="fas fa-star me-1"></i>星空指数</div>
+                            <div class="fw-bold" id="awStarry">-</div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="p-2 border border-secondary rounded h-100 bg-secondary bg-opacity-25">
+                            <div class="text-secondary small mb-1"><i class="fas fa-sun text-warning me-1"></i>日の出/入
+                            </div>
+                            <div class="small fw-bold" id="awSun">-</div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="p-2 border border-secondary rounded h-100 bg-secondary bg-opacity-25">
+                            <div class="text-secondary small mb-1"><i class="fas fa-moon text-info me-1"></i>月の出/入
+                            </div>
+                            <div class="small fw-bold" id="awMoon">-</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 追加: 星空アドバイスと時系列表示 -->
+                <div id="starryAdviceArea" class="mb-4 d-none text-start">
+                    <div class="p-3 rounded bg-opacity-10 bg-info border border-info border-opacity-25 mb-3">
+                        <p class="mb-0 fw-bold text-info small" id="starrySuggestion">
+                            <i class="fas fa-magic me-2"></i>--
+                        </p>
+                    </div>
+                    <button class="btn btn-sm btn-outline-secondary w-100 border-secondary border-opacity-50 text-light"
+                        type="button" data-bs-toggle="collapse" data-bs-target="#hourlyTideWeather"
+                        aria-expanded="false">
+                        <i class="fas fa-chevron-down me-1"></i> 今夜の時系列データ (指数変化) を見る
+                    </button>
+                    <div class="collapse mt-2" id="hourlyTideWeather">
+                        <div class="card card-body bg-dark border-secondary p-0 overflow-hidden"
+                            style="max-height: 250px; overflow-y: auto;">
+                            <div class="list-group list-group-flush" id="hourlyTideList">
+                                <!-- JSで動的に追加 -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <img id="tideImage" src="" class="img-fluid rounded border border-secondary shadow"
+                    style="display:none; width: 100%;">
             </div>
         </div>
     </div>
+</div>
 
-    <!-- Add Spot Modal -->
-    <div class="modal fade" id="addSpotModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered border-secondary shadow-lg">
-            <div class="modal-content bg-dark text-white">
-                <div class="modal-header border-secondary">
-                    <h5 class="modal-title"><i class="fas fa-map-marker-alt text-primary me-2"></i>スポットを新規登録</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
-                        aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="addSpotForm">
-                        <div class="mb-3">
-                            <label class="form-label">スポット名 (必須)</label>
-                            <input type="text" id="spotName" class="form-control bg-secondary text-white border-0"
-                                placeholder="例: 三浦半島 〇〇海岸" required>
+<!-- Add Spot Modal -->
+<div class="modal fade" id="addSpotModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered border-secondary shadow-lg">
+        <div class="modal-content bg-dark text-white">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title"><i class="fas fa-map-marker-alt text-primary me-2"></i>スポットを新規登録</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                    aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addSpotForm">
+                    <div class="mb-3">
+                        <label class="form-label">スポット名 (必須)</label>
+                        <input type="text" id="spotName" class="form-control bg-secondary text-white border-0"
+                            placeholder="例: 三浦半島 〇〇海岸" required>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <label class="form-label">緯度 (Latitude)</label>
+                            <input type="text" id="spotLat" class="form-control bg-dark text-secondary border-0"
+                                readonly>
                         </div>
-                        <div class="row mb-3">
-                            <div class="col-6">
-                                <label class="form-label">緯度 (Latitude)</label>
-                                <input type="text" id="spotLat" class="form-control bg-dark text-secondary border-0"
-                                    readonly>
-                            </div>
-                            <div class="col-6">
-                                <label class="form-label">経度 (Longitude)</label>
-                                <input type="text" id="spotLng" class="form-control bg-dark text-secondary border-0"
-                                    readonly>
-                            </div>
+                        <div class="col-6">
+                            <label class="form-label">経度 (Longitude)</label>
+                            <input type="text" id="spotLng" class="form-control bg-dark text-secondary border-0"
+                                readonly>
                         </div>
-                        <div class="mb-3">
-                            <label class="form-label">メモ・環境</label>
-                            <textarea id="spotNote" class="form-control bg-secondary text-white border-0" rows="3"
-                                placeholder="トイレの有無、駐車場の広さ、撮影条件など"></textarea>
-                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">メモ・環境</label>
+                        <textarea id="spotNote" class="form-control bg-secondary text-white border-0" rows="3"
+                            placeholder="トイレの有無、駐車場の広さ、撮影条件など"></textarea>
+                    </div>
 
-                        <div class="mb-3">
-                            <label class="form-label">タグ（複数選択可）</label>
-                            <div class="d-flex flex-wrap gap-2">
-                                <div class="form-check form-check-inline m-0">
-                                    <input class="form-check-input" type="checkbox" id="tag_morning" value="朝日">
-                                    <label class="form-check-label badge bg-dark border border-secondary"
-                                        for="tag_morning">朝日</label>
-                                </div>
-                                <div class="form-check form-check-inline m-0">
-                                    <input class="form-check-input" type="checkbox" id="tag_evening" value="夕日">
-                                    <label class="form-check-label badge bg-dark border border-secondary"
-                                        for="tag_evening">夕日</label>
-                                </div>
-                                <div class="form-check form-check-inline m-0">
-                                    <input class="form-check-input" type="checkbox" id="tag_stars" value="星空">
-                                    <label class="form-check-label badge bg-dark border border-secondary"
-                                        for="tag_stars">星空</label>
-                                </div>
-                                <div class="form-check form-check-inline m-0">
-                                    <input class="form-check-input" type="checkbox" id="tag_reflection" value="リフレクション">
-                                    <label class="form-check-label badge bg-dark border border-secondary"
-                                        for="tag_reflection">リフレクション</label>
-                                </div>
-                                <div class="form-check form-check-inline m-0">
-                                    <input class="form-check-input" type="checkbox" id="tag_rocks" value="岩礁">
-                                    <label class="form-check-label badge bg-dark border border-secondary"
-                                        for="tag_rocks">岩礁</label>
-                                </div>
-                                <div class="form-check form-check-inline m-0">
-                                    <input class="form-check-input" type="checkbox" id="tag_factory" value="工場夜景">
-                                    <label class="form-check-label badge bg-dark border border-secondary"
-                                        for="tag_factory">工場夜景</label>
-                                </div>
+                    <div class="mb-3">
+                        <label class="form-label">タグ（複数選択可）</label>
+                        <div class="d-flex flex-wrap gap-2">
+                            <div class="form-check form-check-inline m-0">
+                                <input class="form-check-input" type="checkbox" id="tag_morning" value="朝日">
+                                <label class="form-check-label badge bg-dark border border-secondary"
+                                    for="tag_morning">朝日</label>
+                            </div>
+                            <div class="form-check form-check-inline m-0">
+                                <input class="form-check-input" type="checkbox" id="tag_evening" value="夕日">
+                                <label class="form-check-label badge bg-dark border border-secondary"
+                                    for="tag_evening">夕日</label>
+                            </div>
+                            <div class="form-check form-check-inline m-0">
+                                <input class="form-check-input" type="checkbox" id="tag_stars" value="星空">
+                                <label class="form-check-label badge bg-dark border border-secondary"
+                                    for="tag_stars">星空</label>
+                            </div>
+                            <div class="form-check form-check-inline m-0">
+                                <input class="form-check-input" type="checkbox" id="tag_reflection" value="リフレクション">
+                                <label class="form-check-label badge bg-dark border border-secondary"
+                                    for="tag_reflection">リフレクション</label>
+                            </div>
+                            <div class="form-check form-check-inline m-0">
+                                <input class="form-check-input" type="checkbox" id="tag_rocks" value="岩礁">
+                                <label class="form-check-label badge bg-dark border border-secondary"
+                                    for="tag_rocks">岩礁</label>
+                            </div>
+                            <div class="form-check form-check-inline m-0">
+                                <input class="form-check-input" type="checkbox" id="tag_factory" value="工場夜景">
+                                <label class="form-check-label badge bg-dark border border-secondary"
+                                    for="tag_factory">工場夜景</label>
                             </div>
                         </div>
+                    </div>
 
-                        <div class="mb-3">
-                            <label class="form-label">サンプル写真 (任意)</label>
-                            <input type="file" id="spotImage" class="form-control bg-dark text-white border-secondary"
-                                accept="image/*">
-                            <div class="form-text text-secondary mt-1" style="font-size: 0.75rem;">
-                                撮影スポットでの作例があればアップロードできます</div>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer border-secondary">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">キャンセル</button>
-                    <button type="button" class="btn btn-primary" onclick="submitSpot()">登録する</button>
-                </div>
+                    <div class="mb-3">
+                        <label class="form-label">サンプル写真 (任意)</label>
+                        <input type="file" id="spotImage" class="form-control bg-dark text-white border-secondary"
+                            accept="image/*">
+                        <div class="form-text text-secondary mt-1" style="font-size: 0.75rem;">
+                            撮影スポットでの作例があればアップロードできます</div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer border-secondary">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">キャンセル</button>
+                <button type="button" class="btn btn-primary" onclick="submitSpot()">登録する</button>
             </div>
         </div>
     </div>
+</div>
 
-    <!-- Leaflet JS -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-    <script>
-        /**
-         * 地図およびスポット管理のメインスクリプト
-         */
-        // Leaflet.js 地図の初期化（日本全体を表示）
-        const map = L.map('map').setView([35.5, 138.0], 6);
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script>
+    /**
+     * 地図およびスポット管理のメインスクリプト
+     */
+    // Leaflet.js 地図の初期化（日本全体を表示）
+    const map = L.map('map').setView([35.5, 138.0], 6);
 
-        // Dark theme map tiles
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-            attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
-            subdomains: 'abcd',
-            maxZoom: 20
-        }).addTo(map);
+    // Dark theme map tiles
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
+        subdomains: 'abcd',
+        maxZoom: 20
+    }).addTo(map);
 
-        // Python（Flask）から受け取った全スポット情報をJavaScriptオブジェクトとして保持
-        const spots = {{ spots | tojson }};
-        const markers = {}; // スポットIDをキーにした地図上マーカーの辞書型オブジェクト
+    // Python（Flask）から受け取った全スポット情報をJavaScriptオブジェクトとして保持
+    const spots = {{ spots | tojson }};
+    const markers = {}; // スポットIDをキーにした地図上マーカーの辞書型オブジェクト
 
-        // カスタムアイコン（波のアイコン）の定義
-        const waveIcon = L.divIcon({
-            html: '<i class="fas fa-water fa-lg text-primary" style="filter: drop-shadow(0 0 5px rgba(13,110,253,0.8));"></i>',
-            className: 'custom-leaflet-icon',
-            iconSize: [20, 20],
-            iconAnchor: [10, 10],
-            popupAnchor: [0, -10]
-        });
+    // カスタムアイコン（波のアイコン）の定義
+    const waveIcon = L.divIcon({
+        html: '<i class="fas fa-water fa-lg text-primary" style="filter: drop-shadow(0 0 5px rgba(13,110,253,0.8));"></i>',
+        className: 'custom-leaflet-icon',
+        iconSize: [20, 20],
+        iconAnchor: [10, 10],
+        popupAnchor: [0, -10]
+    });
 
-        // Add markers
-        spots.forEach(spot => {
-            const marker = L.marker([spot.lat, spot.lng], { icon: waveIcon }).addTo(map);
+    // Add markers
+    spots.forEach(spot => {
+        const marker = L.marker([spot.lat, spot.lng], { icon: waveIcon }).addTo(map);
 
-            let imgHtml = '';
-            if (spot.image_filename) {
-                imgHtml = `<img src="/static/uploads/sea_spots/${spot.image_filename}" style="width:100%; height:100px; object-fit:cover; border-radius:5px; margin-bottom:8px;">`;
-            }
+        let imgHtml = '';
+        if (spot.image_filename) {
+            imgHtml = `<img src="/static/uploads/sea_spots/${spot.image_filename}" style="width:100%; height:100px; object-fit:cover; border-radius:5px; margin-bottom:8px;">`;
+        }
 
-            marker.bindPopup(`
+        marker.bindPopup(`
             <div class="text-center p-1" style="min-width: 150px;">
                 ${imgHtml}
                 <h6 class="mb-2 fw-bold border-bottom border-secondary pb-1">${spot.name}</h6>
@@ -399,193 +390,193 @@
                 </div>
             </div>
         `);
-            markers[spot.id] = marker;
-        });
+        markers[spot.id] = marker;
+    });
 
-        // Function to pan to spot when card is clicked
-        window.panToSpot = function (lat, lng, id) {
-            map.flyTo([lat, lng], 10, { duration: 1.5 });
-            setTimeout(() => {
-                if (markers[id]) markers[id].openPopup();
-            }, 1500);
-        };
+    // Function to pan to spot when card is clicked
+    window.panToSpot = function (lat, lng, id) {
+        map.flyTo([lat, lng], 10, { duration: 1.5 });
+        setTimeout(() => {
+            if (markers[id]) markers[id].openPopup();
+        }, 1500);
+    };
 
-        // Map click event for adding new spot
-        let tempMarker = null;
-        let addSpotModal = null;
+    // Map click event for adding new spot
+    let tempMarker = null;
+    let addSpotModal = null;
 
-        document.addEventListener('DOMContentLoaded', function () {
-            addSpotModal = new bootstrap.Modal(document.getElementById('addSpotModal'));
-        });
+    document.addEventListener('DOMContentLoaded', function () {
+        addSpotModal = new bootstrap.Modal(document.getElementById('addSpotModal'));
+    });
 
-        map.on('click', function (e) {
-            if (tempMarker) map.removeLayer(tempMarker);
+    map.on('click', function (e) {
+        if (tempMarker) map.removeLayer(tempMarker);
 
-            const lat = e.latlng.lat;
-            const lng = e.latlng.lng;
+        const lat = e.latlng.lat;
+        const lng = e.latlng.lng;
 
-            tempMarker = L.marker([lat, lng], {
-                icon: L.divIcon({
-                    html: '<i class="fas fa-map-pin fa-2x text-warning pulse-anim"></i>',
-                    className: 'custom-leaflet-icon',
-                    iconAnchor: [12, 24]
-                })
-            }).addTo(map);
-
-            // Populate modal inputs
-            document.getElementById('spotLat').value = lat.toFixed(5);
-            document.getElementById('spotLng').value = lng.toFixed(5);
-            document.getElementById('spotName').value = '';
-            document.getElementById('spotNote').value = '';
-            document.getElementById('spotImage').value = '';
-
-            // Uncheck all tags
-            document.querySelectorAll('#addSpotForm input[type="checkbox"]').forEach(cb => {
-                cb.checked = false;
-            });
-
-            if (addSpotModal) addSpotModal.show();
-        });
-
-        // Submit new spot
-        // Add Spot モーダルで「登録する」ボタンがクリックされた時の処理。
-        // フォーム内のテキスト、位置情報、チェックされた複数のタグ、および画像ファイルを取得し、
-        // FormDataとしてバックエンド（/api/sea_spots/add）へ非同期で送信してDBに登録する。
-        window.submitSpot = function () {
-            const name = document.getElementById('spotName').value.trim();
-            const lat = document.getElementById('spotLat').value;
-            const lng = document.getElementById('spotLng').value;
-            const note = document.getElementById('spotNote').value;
-            const imageFile = document.getElementById('spotImage').files[0];
-
-            // Collect checked tags
-            // 選択された「朝日」「夕日」などのタグを配列に収集
-            const selectedTags = [];
-            document.querySelectorAll('#addSpotForm input[type="checkbox"]:checked').forEach(cb => {
-                selectedTags.push(cb.value);
-            });
-
-            if (!name) {
-                alert('スポット名は必須です。');
-                return;
-            }
-
-            const formData = new FormData();
-            formData.append('name', name);
-            formData.append('lat', lat);
-            formData.append('lng', lng);
-            formData.append('note', note);
-            formData.append('tags', selectedTags.join(','));
-            if (imageFile) {
-                formData.append('image', imageFile);
-            }
-
-            const submitBtn = document.querySelector('#addSpotModal .btn-primary');
-            const originalText = submitBtn.innerHTML;
-            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> 保存中...';
-            submitBtn.disabled = true;
-
-            fetch("{{ url_for('sea_spots.add_spot') }}", {
-                method: "POST",
-                body: formData
+        tempMarker = L.marker([lat, lng], {
+            icon: L.divIcon({
+                html: '<i class="fas fa-map-pin fa-2x text-warning pulse-anim"></i>',
+                className: 'custom-leaflet-icon',
+                iconAnchor: [12, 24]
             })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.success) {
-                        location.reload();
-                    } else {
-                        alert('エラー: ' + data.error);
-                        submitBtn.innerHTML = originalText;
-                        submitBtn.disabled = false;
-                    }
-                })
-                .catch(err => {
-                    alert("通信エラーが発生しました。");
+        }).addTo(map);
+
+        // Populate modal inputs
+        document.getElementById('spotLat').value = lat.toFixed(5);
+        document.getElementById('spotLng').value = lng.toFixed(5);
+        document.getElementById('spotName').value = '';
+        document.getElementById('spotNote').value = '';
+        document.getElementById('spotImage').value = '';
+
+        // Uncheck all tags
+        document.querySelectorAll('#addSpotForm input[type="checkbox"]').forEach(cb => {
+            cb.checked = false;
+        });
+
+        if (addSpotModal) addSpotModal.show();
+    });
+
+    // Submit new spot
+    // Add Spot モーダルで「登録する」ボタンがクリックされた時の処理。
+    // フォーム内のテキスト、位置情報、チェックされた複数のタグ、および画像ファイルを取得し、
+    // FormDataとしてバックエンド（/api/sea_spots/add）へ非同期で送信してDBに登録する。
+    window.submitSpot = function () {
+        const name = document.getElementById('spotName').value.trim();
+        const lat = document.getElementById('spotLat').value;
+        const lng = document.getElementById('spotLng').value;
+        const note = document.getElementById('spotNote').value;
+        const imageFile = document.getElementById('spotImage').files[0];
+
+        // Collect checked tags
+        // 選択された「朝日」「夕日」などのタグを配列に収集
+        const selectedTags = [];
+        document.querySelectorAll('#addSpotForm input[type="checkbox"]:checked').forEach(cb => {
+            selectedTags.push(cb.value);
+        });
+
+        if (!name) {
+            alert('スポット名は必須です。');
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('name', name);
+        formData.append('lat', lat);
+        formData.append('lng', lng);
+        formData.append('note', note);
+        formData.append('tags', selectedTags.join(','));
+        if (imageFile) {
+            formData.append('image', imageFile);
+        }
+
+        const submitBtn = document.querySelector('#addSpotModal .btn-primary');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> 保存中...';
+        submitBtn.disabled = true;
+
+        fetch("{{ url_for('sea_spots.add_spot') }}", {
+            method: "POST",
+            body: formData
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('エラー: ' + data.error);
                     submitBtn.innerHTML = originalText;
                     submitBtn.disabled = false;
-                });
-        };
+                }
+            })
+            .catch(err => {
+                alert("通信エラーが発生しました。");
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+            });
+    };
 
-        // Tide Modal Logic
-        // マップ上のポップアップやサイドバーの「干満」ボタンから呼び出される処理。
-        // モーダルを開き、表示対象のスポットのIDを保持してデータのバックグラウンド取得を開始する。
-        let currentSpotId = null;
-        let tideModal = null;
+    // Tide Modal Logic
+    // マップ上のポップアップやサイドバーの「干満」ボタンから呼び出される処理。
+    // モーダルを開き、表示対象のスポットのIDを保持してデータのバックグラウンド取得を開始する。
+    let currentSpotId = null;
+    let tideModal = null;
 
-        window.showTideModal = function (spotId, spotName) {
-            if (!tideModal) {
-                tideModal = new bootstrap.Modal(document.getElementById('tideModal'));
-            }
-            currentSpotId = spotId;
-            document.getElementById('tideModalTitle').innerHTML = `<i class="fas fa-water text-primary me-2"></i>${spotName}の干満`;
+    window.showTideModal = function (spotId, spotName) {
+        if (!tideModal) {
+            tideModal = new bootstrap.Modal(document.getElementById('tideModal'));
+        }
+        currentSpotId = spotId;
+        document.getElementById('tideModalTitle').innerHTML = `<i class="fas fa-water text-primary me-2"></i>${spotName}の干満`;
 
-            // Close map popup if open
-            if (markers[spotId]) markers[spotId].closePopup();
+        // Close map popup if open
+        if (markers[spotId]) markers[spotId].closePopup();
 
-            tideModal.show();
-            fetchTideData();
-        };
+        tideModal.show();
+        fetchTideData();
+    };
 
-        // モーダル内で情報を取得・更新する処理。
-        // 現在のスポットIDと日付をサーバーAPIに送信し、干満画像・21時の天気・星空指数・日没/月の出時間などの情報を取得。
-        // 取得したJSONデータを走査して、モーダル内の各HTML要素にUIを動的反映する。
-        window.fetchTideData = function () {
-            if (!currentSpotId) return;
+    // モーダル内で情報を取得・更新する処理。
+    // 現在のスポットIDと日付をサーバーAPIに送信し、干満画像・21時の天気・星空指数・日没/月の出時間などの情報を取得。
+    // 取得したJSONデータを走査して、モーダル内の各HTML要素にUIを動的反映する。
+    window.fetchTideData = function () {
+        if (!currentSpotId) return;
 
-            const dateStr = document.getElementById('tideDate').value;
-            const imgEl = document.getElementById('tideImage');
-            const loadingEl = document.getElementById('tideLoading');
-            const errorEl = document.getElementById('tideError');
-            const infoEl = document.getElementById('astroWeatherInfo');
+        const dateStr = document.getElementById('tideDate').value;
+        const imgEl = document.getElementById('tideImage');
+        const loadingEl = document.getElementById('tideLoading');
+        const errorEl = document.getElementById('tideError');
+        const infoEl = document.getElementById('astroWeatherInfo');
 
-            imgEl.style.display = 'none';
-            infoEl.classList.add('d-none');
-            errorEl.classList.add('d-none');
-            loadingEl.classList.remove('d-none');
+        imgEl.style.display = 'none';
+        infoEl.classList.add('d-none');
+        errorEl.classList.add('d-none');
+        loadingEl.classList.remove('d-none');
 
-            fetch(`/api/sea_spots/${currentSpotId}/tide?date=${dateStr}`)
-                .then(res => res.json())
-                .then(data => {
-                    loadingEl.classList.add('d-none');
+        fetch(`/api/sea_spots/${currentSpotId}/tide?date=${dateStr}`)
+            .then(res => res.json())
+            .then(data => {
+                loadingEl.classList.add('d-none');
 
-                    if (data.error) {
-                        errorEl.textContent = data.error;
-                        errorEl.classList.remove('d-none');
-                        return;
+                if (data.error) {
+                    errorEl.textContent = data.error;
+                    errorEl.classList.remove('d-none');
+                    return;
+                }
+
+                if (data.image_url) {
+                    imgEl.src = data.image_url;
+                    imgEl.style.display = 'block';
+                }
+
+                // Populate Weather
+                const adviceEl = document.getElementById('starryAdviceArea');
+                if (data.weather) {
+                    document.getElementById('awWeather').innerHTML = `<i class="${data.weather.icon_class} me-1"></i>${data.weather.condition}`;
+
+                    let starryColor = 'text-success';
+                    if (data.weather.starry_index < 30) starryColor = 'text-danger';
+                    else if (data.weather.starry_index < 70) starryColor = 'text-warning';
+                    document.getElementById('awStarry').innerHTML = `<span class="${starryColor}">${data.weather.starry_index}</span> / 100`;
+
+                    // Suggestion
+                    if (data.weather.suggestion) {
+                        document.getElementById('starrySuggestion').innerHTML = `<i class="fas fa-magic me-2"></i>${data.weather.suggestion}`;
+                        adviceEl.classList.remove('d-none');
                     }
 
-                    if (data.image_url) {
-                        imgEl.src = data.image_url;
-                        imgEl.style.display = 'block';
-                    }
-
-                    // Populate Weather
-                    const adviceEl = document.getElementById('starryAdviceArea');
-                    if (data.weather) {
-                        document.getElementById('awWeather').innerHTML = `<i class="${data.weather.icon_class} me-1"></i>${data.weather.condition}`;
-
-                        let starryColor = 'text-success';
-                        if (data.weather.starry_index < 30) starryColor = 'text-danger';
-                        else if (data.weather.starry_index < 70) starryColor = 'text-warning';
-                        document.getElementById('awStarry').innerHTML = `<span class="${starryColor}">${data.weather.starry_index}</span> / 100`;
-
-                        // Suggestion
-                        if (data.weather.suggestion) {
-                            document.getElementById('starrySuggestion').innerHTML = `<i class="fas fa-magic me-2"></i>${data.weather.suggestion}`;
-                            adviceEl.classList.remove('d-none');
-                        }
-
-                        // Hourly List
-                        if (data.weather.hourly) {
-                            const listEl = document.getElementById('hourlyTideList');
-                            listEl.innerHTML = '';
-                            const targetDate = dateStr;
-                            data.weather.hourly.forEach(h => {
-                                // Filter tonight (17 PM to 7 AM next day)
-                                if ((h.date === targetDate && h.hour >= 17) || (h.date !== targetDate && h.hour <= 7)) {
-                                    const barColor = h.starry_index >= 80 ? 'bg-success' : (h.starry_index >= 50 ? 'bg-info' : (h.starry_index >= 30 ? 'bg-warning' : 'bg-danger'));
-                                    const timeColor = h.hour === 21 ? 'text-primary fw-bold' : 'text-muted';
-                                    const itemHtml = `
+                    // Hourly List
+                    if (data.weather.hourly) {
+                        const listEl = document.getElementById('hourlyTideList');
+                        listEl.innerHTML = '';
+                        const targetDate = dateStr;
+                        data.weather.hourly.forEach(h => {
+                            // Filter tonight (15 PM to 10 AM next day)
+                            if ((h.date === targetDate && h.hour >= 15) || (h.date !== targetDate && h.hour <= 10)) {
+                                const barColor = h.starry_index >= 80 ? 'bg-success' : (h.starry_index >= 50 ? 'bg-info' : (h.starry_index >= 30 ? 'bg-warning' : 'bg-danger'));
+                                const timeColor = h.hour === 21 ? 'text-primary fw-bold' : 'text-muted';
+                                const itemHtml = `
                                         <div class="list-group-item bg-dark text-white border-secondary border-opacity-50 py-1 d-flex justify-content-between align-items-center">
                                             <div style="width: 50px;"><span class="small font-monospace ${timeColor}">${h.time}</span></div>
                                             <div class="flex-grow-1 px-3">
@@ -599,170 +590,170 @@
                                             </div>
                                         </div>
                                     `;
-                                    listEl.insertAdjacentHTML('beforeend', itemHtml);
-                                }
-                            });
-                        }
-                    } else {
-                        document.getElementById('awWeather').innerHTML = '-';
-                        document.getElementById('awStarry').innerHTML = '-';
-                        adviceEl.classList.add('d-none');
+                                listEl.insertAdjacentHTML('beforeend', itemHtml);
+                            }
+                        });
                     }
+                } else {
+                    document.getElementById('awWeather').innerHTML = '-';
+                    document.getElementById('awStarry').innerHTML = '-';
+                    adviceEl.classList.add('d-none');
+                }
 
-                    // Populate Sun
-                    if (data.sun) {
-                        document.getElementById('awSun').innerHTML = `出: ${data.sun.sunrise}<br>入: ${data.sun.sunset}`;
-                    } else {
-                        document.getElementById('awSun').innerHTML = '-';
-                    }
+                // Populate Sun
+                if (data.sun) {
+                    document.getElementById('awSun').innerHTML = `出: ${data.sun.sunrise}<br>入: ${data.sun.sunset}`;
+                } else {
+                    document.getElementById('awSun').innerHTML = '-';
+                }
 
-                    // Populate Moon
-                    if (data.moon) {
-                        document.getElementById('awMoon').innerHTML = `出: ${data.moon.moon_rise}<br>入: ${data.moon.moon_set} <span class="ms-1 text-secondary" style="font-size:0.7rem;">(月齢${data.moon.moon_age})</span>`;
-                    } else {
-                        document.getElementById('awMoon').innerHTML = '-';
-                    }
+                // Populate Moon
+                if (data.moon) {
+                    document.getElementById('awMoon').innerHTML = `出: ${data.moon.moon_rise}<br>入: ${data.moon.moon_set} <span class="ms-1 text-secondary" style="font-size:0.7rem;">(月齢${data.moon.moon_age})</span>`;
+                } else {
+                    document.getElementById('awMoon').innerHTML = '-';
+                }
 
-                    infoEl.classList.remove('d-none');
-                })
-                .catch(err => {
-                    loadingEl.classList.add('d-none');
-                    errorEl.textContent = "通信エラー";
-                    errorEl.classList.remove('d-none');
-                });
-        };
+                infoEl.classList.remove('d-none');
+            })
+            .catch(err => {
+                loadingEl.classList.add('d-none');
+                errorEl.textContent = "通信エラー";
+                errorEl.classList.remove('d-none');
+            });
+    };
 
-        // Address Search Logic (Nominatim API)
-        window.searchAddress = function () {
-            const query = document.getElementById('addressSearchInput').value.trim();
-            if (!query) return;
+    // Address Search Logic (Nominatim API)
+    window.searchAddress = function () {
+        const query = document.getElementById('addressSearchInput').value.trim();
+        if (!query) return;
 
-            // Button feedback
-            const btn = document.querySelector('button[onclick="searchAddress()"]');
-            const originalContent = btn.innerHTML;
-            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>検索中...';
-            btn.disabled = true;
+        // Button feedback
+        const btn = document.querySelector('button[onclick="searchAddress()"]');
+        const originalContent = btn.innerHTML;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>検索中...';
+        btn.disabled = true;
 
-            fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`)
-                .then(res => res.json())
-                .then(data => {
-                    if (data && data.length > 0) {
-                        const lat = parseFloat(data[0].lat);
-                        const lon = parseFloat(data[0].lon);
-                        map.flyTo([lat, lon], 12, { duration: 1.5 });
-                    } else {
-                        alert('指定された住所や地名が見つかりませんでした。別のキーワードをお試しください。');
-                    }
-                })
-                .catch(err => {
-                    console.error('Geocoding error:', err);
-                    alert('住所検索中にエラーが発生しました。');
-                })
-                .finally(() => {
-                    btn.innerHTML = originalContent;
-                    btn.disabled = false;
-                });
-        };
+        fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data && data.length > 0) {
+                    const lat = parseFloat(data[0].lat);
+                    const lon = parseFloat(data[0].lon);
+                    map.flyTo([lat, lon], 12, { duration: 1.5 });
+                } else {
+                    alert('指定された住所や地名が見つかりませんでした。別のキーワードをお試しください。');
+                }
+            })
+            .catch(err => {
+                console.error('Geocoding error:', err);
+                alert('住所検索中にエラーが発生しました。');
+            })
+            .finally(() => {
+                btn.innerHTML = originalContent;
+                btn.disabled = false;
+            });
+    };
 
-        // Also trigger search on Enter key
-        // エンターキーによる住所検索の発火処理
-        document.getElementById('addressSearchInput')?.addEventListener('keypress', function (e) {
-            if (e.key === 'Enter') {
-                window.searchAddress();
+    // Also trigger search on Enter key
+    // エンターキーによる住所検索の発火処理
+    document.getElementById('addressSearchInput')?.addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') {
+            window.searchAddress();
+        }
+    });
+
+    let currentActiveTag = '';
+
+    // Tag Filtering Logic
+    // サイドバー上部のタグ一覧（バッジ）がクリックされたときの処理。
+    // 選択されたタグを `currentActiveTag` に設定し、UI上の見た目（badgeの色）を更新後、適用関数を呼ぶ。
+    window.filterByTag = function (tag) {
+        currentActiveTag = tag;
+
+        // Update badge styling
+        const badges = document.querySelectorAll('#tagFilterContainer .badge');
+        badges.forEach(b => {
+            b.classList.remove('bg-primary');
+            b.classList.add('bg-dark', 'text-secondary');
+
+            if (tag === '' && b.textContent === 'すべて') {
+                b.classList.remove('bg-dark', 'text-secondary');
+                b.classList.add('bg-primary');
+            } else if (b.textContent === '#' + tag) {
+                b.classList.remove('bg-dark', 'text-secondary');
+                b.classList.add('bg-primary');
             }
         });
 
-        let currentActiveTag = '';
+        applyFilters();
+    };
 
-        // Tag Filtering Logic
-        // サイドバー上部のタグ一覧（バッジ）がクリックされたときの処理。
-        // 選択されたタグを `currentActiveTag` に設定し、UI上の見た目（badgeの色）を更新後、適用関数を呼ぶ。
-        window.filterByTag = function (tag) {
-            currentActiveTag = tag;
+    // Search and Filter Logic
+    // テキスト入力でのキーワード検索と、選択されたタグの両方による複合条件チェック。
+    // 条件を満たすスポットだけを地図上に表示（マーカーを追加）し、サイドバーに表示（display: block;）する。
+    // 条件に合わないものは非表示（マーカーを削除、display: none;）にする。
+    const searchInput = document.getElementById('spotSearch');
+    if (searchInput) {
+        searchInput.addEventListener('input', applyFilters);
+    }
 
-            // Update badge styling
-            const badges = document.querySelectorAll('#tagFilterContainer .badge');
-            badges.forEach(b => {
-                b.classList.remove('bg-primary');
-                b.classList.add('bg-dark', 'text-secondary');
+    function applyFilters() {
+        const query = (document.getElementById('spotSearch')?.value || '').toLowerCase().trim();
+        const cards = document.querySelectorAll('.spot-card');
 
-                if (tag === '' && b.textContent === 'すべて') {
-                    b.classList.remove('bg-dark', 'text-secondary');
-                    b.classList.add('bg-primary');
-                } else if (b.textContent === '#' + tag) {
-                    b.classList.remove('bg-dark', 'text-secondary');
-                    b.classList.add('bg-primary');
+        cards.forEach(card => {
+            // Need to get the actual name from the heading - fixed data attribute issue by getting text
+            const nameEl = card.querySelector('.card-title');
+            const name = nameEl ? nameEl.textContent.toLowerCase() : '';
+
+            // Get tags from the card
+            const tagEls = card.querySelectorAll('.spot-tag');
+            const tags = Array.from(tagEls).map(el => el.textContent.replace('#', ''));
+
+            // Match search text
+            const matchesSearch = name.includes(query);
+
+            // Match tag
+            const matchesTag = currentActiveTag === '' || tags.includes(currentActiveTag);
+
+            // Note: Data attribute data-name wasn't attached in the loop, used querySelector fallback
+            const spotId = card.getAttribute('onclick')?.match(/panToSpot\([^,]+,\s*[^,]+,\s*(\d+)\)/)?.[1];
+
+            if (matchesSearch && matchesTag) {
+                card.style.display = 'block';
+                if (spotId && markers[spotId] && !map.hasLayer(markers[spotId])) {
+                    markers[spotId].addTo(map);
                 }
-            });
-
-            applyFilters();
-        };
-
-        // Search and Filter Logic
-        // テキスト入力でのキーワード検索と、選択されたタグの両方による複合条件チェック。
-        // 条件を満たすスポットだけを地図上に表示（マーカーを追加）し、サイドバーに表示（display: block;）する。
-        // 条件に合わないものは非表示（マーカーを削除、display: none;）にする。
-        const searchInput = document.getElementById('spotSearch');
-        if (searchInput) {
-            searchInput.addEventListener('input', applyFilters);
-        }
-
-        function applyFilters() {
-            const query = (document.getElementById('spotSearch')?.value || '').toLowerCase().trim();
-            const cards = document.querySelectorAll('.spot-card');
-
-            cards.forEach(card => {
-                // Need to get the actual name from the heading - fixed data attribute issue by getting text
-                const nameEl = card.querySelector('.card-title');
-                const name = nameEl ? nameEl.textContent.toLowerCase() : '';
-
-                // Get tags from the card
-                const tagEls = card.querySelectorAll('.spot-tag');
-                const tags = Array.from(tagEls).map(el => el.textContent.replace('#', ''));
-
-                // Match search text
-                const matchesSearch = name.includes(query);
-
-                // Match tag
-                const matchesTag = currentActiveTag === '' || tags.includes(currentActiveTag);
-
-                // Note: Data attribute data-name wasn't attached in the loop, used querySelector fallback
-                const spotId = card.getAttribute('onclick')?.match(/panToSpot\([^,]+,\s*[^,]+,\s*(\d+)\)/)?.[1];
-
-                if (matchesSearch && matchesTag) {
-                    card.style.display = 'block';
-                    if (spotId && markers[spotId] && !map.hasLayer(markers[spotId])) {
-                        markers[spotId].addTo(map);
-                    }
-                } else {
-                    card.style.display = 'none';
-                    if (spotId && markers[spotId] && map.hasLayer(markers[spotId])) {
-                        map.removeLayer(markers[spotId]);
-                    }
+            } else {
+                card.style.display = 'none';
+                if (spotId && markers[spotId] && map.hasLayer(markers[spotId])) {
+                    map.removeLayer(markers[spotId]);
                 }
-            });
-        }
-    </script>
-    <style>
-        @keyframes pulse-anim {
-            0% {
-                transform: scale(1);
-                filter: drop-shadow(0 0 5px rgba(255, 193, 7, 0.8));
             }
-
-            50% {
-                transform: scale(1.2);
-                filter: drop-shadow(0 0 15px rgba(255, 193, 7, 1));
-            }
-
-            100% {
-                transform: scale(1);
-                filter: drop-shadow(0 0 5px rgba(255, 193, 7, 0.8));
-            }
+        });
+    }
+</script>
+<style>
+    @keyframes pulse-anim {
+        0% {
+            transform: scale(1);
+            filter: drop-shadow(0 0 5px rgba(255, 193, 7, 0.8));
         }
 
-        .pulse-anim {
-            animation: pulse-anim 1s infinite;
+        50% {
+            transform: scale(1.2);
+            filter: drop-shadow(0 0 15px rgba(255, 193, 7, 1));
         }
-    </style>
-    {% endblock %}
+
+        100% {
+            transform: scale(1);
+            filter: drop-shadow(0 0 5px rgba(255, 193, 7, 0.8));
+        }
+    }
+
+    .pulse-anim {
+        animation: pulse-anim 1s infinite;
+    }
+</style>
+{% endblock %}

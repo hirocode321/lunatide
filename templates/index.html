@@ -138,9 +138,9 @@
                                 style="max-height: 300px; overflow-y: auto;">
                                 <div class="list-group list-group-flush">
                                     {% for h in weather_info.hourly %}
-                                    {# 日没から翌朝までのデータを表示 (簡易的に17時から翌7時まで) #}
-                                    {% if (h.date == weather_info.hourly[0].date and h.hour >= 17) or (h.date !=
-                                    weather_info.hourly[0].date and h.hour <= 7) %} <div
+                                    {# 指定日の15時から翌日10時までを表示（夜間を広くカバー） #}
+                                    {% if (h.date == weather_info.hourly[0].date and h.hour >= 15) or (h.date !=
+                                    weather_info.hourly[0].date and h.hour <= 10) %} <div
                                         class="list-group-item bg-dark text-white border-secondary border-opacity-50 py-2 d-flex justify-content-between align-items-center">
                                         <div class="d-flex align-items-center" style="width: 80px;">
                                             <span
