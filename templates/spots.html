@@ -90,6 +90,83 @@
     </div>
 </div>
 
+<!-- Weather & Astro Details Modal -->
+<div class="modal fade" id="weatherModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered border-secondary shadow-lg">
+        <div class="modal-content bg-dark text-white">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title" id="weatherModalTitle"><i class="fas fa-star text-primary me-2"></i>スポット詳細情報
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                    aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <div class="d-flex justify-content-center align-items-center mb-3">
+                    <input type="date" id="weatherDate"
+                        class="form-control bg-secondary text-white border-0 w-auto me-2" value="{{ today }}">
+                    <button class="btn btn-outline-light" onclick="fetchWeatherDetails()">情報を更新</button>
+                </div>
+
+                <div id="weatherLoading" class="my-4 d-none">
+                    <div class="spinner-border text-primary" role="status"></div>
+                    <p class="mt-2 text-secondary">データを取得中...</p>
+                </div>
+                <div id="weatherError" class="alert alert-danger d-none">データを取得できませんでした。</div>
+
+                <!-- 天気・天文情報エリア -->
+                <div id="spotWeatherInfo" class="row g-2 mb-3 d-none text-start">
+                    <div class="col-6 col-md-3">
+                        <div class="p-2 border border-secondary rounded h-100 bg-secondary bg-opacity-25">
+                            <div class="text-secondary small mb-1"><i class="fas fa-cloud me-1"></i>21時の天気</div>
+                            <div class="fw-bold" id="swWeather">-</div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="p-2 border border-secondary rounded h-100 bg-secondary bg-opacity-25">
+                            <div class="text-secondary small mb-1"><i class="fas fa-star me-1"></i>星空指数</div>
+                            <div class="fw-bold" id="swStarry">-</div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="p-2 border border-secondary rounded h-100 bg-secondary bg-opacity-25">
+                            <div class="text-secondary small mb-1"><i class="fas fa-sun text-warning me-1"></i>日の出/入
+                            </div>
+                            <div class="small fw-bold" id="swSun">-</div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="p-2 border border-secondary rounded h-100 bg-secondary bg-opacity-25">
+                            <div class="text-secondary small mb-1"><i class="fas fa-moon text-info me-1"></i>月の出/入</div>
+                            <div class="small fw-bold" id="swMoon">-</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 星空アドバイスと時系列表示 -->
+                <div id="starryAdviceArea" class="mb-4 d-none text-start">
+                    <div class="p-3 rounded bg-opacity-10 bg-info border border-info border-opacity-25 mb-3">
+                        <p class="mb-0 fw-bold text-info small" id="starrySuggestion">
+                            <i class="fas fa-magic me-2"></i>--
+                        </p>
+                    </div>
+                    <button class="btn btn-sm btn-outline-secondary w-100 border-secondary border-opacity-50 text-light"
+                        type="button" data-bs-toggle="collapse" data-bs-target="#hourlyBreakdown" aria-expanded="false">
+                        <i class="fas fa-chevron-down me-1"></i> 今夜の時系列データを表示
+                    </button>
+                    <div class="collapse mt-2" id="hourlyBreakdown">
+                        <div class="card card-body bg-dark border-secondary p-0 overflow-hidden"
+                            style="max-height: 250px; overflow-y: auto;">
+                            <div class="list-group list-group-flush" id="hourlyWeatherList">
+                                <!-- JSで動的に追加 -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Add Spot Modal Mock -->
 <div class="modal fade" id="addSpotModal" tabindex="-1" aria-labelledby="addSpotModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered border-secondary shadow-lg">
@@ -164,9 +241,14 @@
     spots.forEach(spot => {
         const marker = L.marker([spot.lat, spot.lng], { icon: starIcon }).addTo(map);
         marker.bindPopup(`
-            <div class="text-center p-1">
+            <div class="text-center p-1" style="min-width: 150px;">
                 <h6 class="mb-1 fw-bold border-bottom border-secondary pb-1">${spot.name}</h6>
                 <div class="small text-warning mb-2"><i class="fas fa-star"></i> ${spot.rating}/5 (Bortle: ${spot.bortle})</div>
+                <div class="d-flex justify-content-center gap-1 mb-1">
+                    <button class="btn btn-sm btn-primary py-1 px-2 rounded-pill" onclick="showWeatherModal(${spot.lat}, ${spot.lng}, '${spot.name}', ${spot.id})">
+                        <i class="fas fa-cloud-moon"></i> 詳細と天気
+                    </button>
+                </div>
                 <p class="small mb-0 opacity-75">${spot.note}</p>
             </div>
         `);
@@ -183,6 +265,109 @@
         setTimeout(() => {
             if (markers[id]) markers[id].openPopup();
         }, 1500);
+    };
+
+    // Weather Modal Logic
+    let currentSpotLoc = null;
+    let weatherModal = null;
+
+    window.showWeatherModal = function (lat, lng, name, id) {
+        if (!weatherModal) {
+            weatherModal = new bootstrap.Modal(document.getElementById('weatherModal'));
+        }
+        currentSpotLoc = { lat, lng, name };
+        document.getElementById('weatherModalTitle').innerHTML = `<i class="fas fa-star text-primary me-2"></i>${name}の現況`;
+
+        // Close popup if open
+        if (markers[id]) markers[id].closePopup();
+
+        weatherModal.show();
+        fetchWeatherDetails();
+    };
+
+    window.fetchWeatherDetails = function () {
+        if (!currentSpotLoc) return;
+
+        const dateStr = document.getElementById('weatherDate').value;
+        const loadingEl = document.getElementById('weatherLoading');
+        const errorEl = document.getElementById('weatherError');
+        const infoEl = document.getElementById('spotWeatherInfo');
+        const adviceArea = document.getElementById('starryAdviceArea');
+
+        infoEl.classList.add('d-none');
+        adviceArea.classList.add('d-none');
+        errorEl.classList.add('d-none');
+        loadingEl.classList.remove('d-none');
+
+        fetch(`/api/spots/weather?lat=${currentSpotLoc.lat}&lng=${currentSpotLoc.lng}&date=${dateStr}`)
+            .then(res => res.json())
+            .then(data => {
+                loadingEl.classList.add('d-none');
+                if (data.error) {
+                    errorEl.textContent = data.error;
+                    errorEl.classList.remove('d-none');
+                    return;
+                }
+
+                // Populate Weather Basics
+                if (data.weather) {
+                    document.getElementById('swWeather').innerHTML = `<i class="${data.weather.icon_class} me-1"></i>${data.weather.condition}`;
+
+                    let starryColor = 'text-success';
+                    if (data.weather.starry_index < 30) starryColor = 'text-danger';
+                    else if (data.weather.starry_index < 70) starryColor = 'text-warning';
+                    document.getElementById('swStarry').innerHTML = `<span class="${starryColor}">${data.weather.starry_index}</span> / 100`;
+
+                    // Suggestion
+                    if (data.weather.suggestion) {
+                        document.getElementById('starrySuggestion').innerHTML = `<i class="fas fa-magic me-2"></i>${data.weather.suggestion}`;
+                        adviceArea.classList.remove('d-none');
+                    }
+
+                    // Hourly List
+                    if (data.weather.hourly) {
+                        const listEl = document.getElementById('hourlyWeatherList');
+                        listEl.innerHTML = '';
+                        data.weather.hourly.forEach(h => {
+                            // Filter night hours (15:00 to 10:00 next day)
+                            if ((h.date === dateStr && h.hour >= 15) || (h.date !== dateStr && h.hour <= 10)) {
+                                const barColor = h.starry_index >= 80 ? 'bg-success' : (h.starry_index >= 50 ? 'bg-info' : (h.starry_index >= 30 ? 'bg-warning' : 'bg-danger'));
+                                const timeColor = h.hour === 21 ? 'text-primary fw-bold' : 'text-muted';
+                                const itemHtml = `
+                                    <div class="list-group-item bg-dark text-white border-secondary border-opacity-50 py-1 d-flex justify-content-between align-items-center">
+                                        <div style="width: 50px;"><span class="small font-monospace ${timeColor}">${h.time}</span></div>
+                                        <div class="flex-grow-1 px-3">
+                                            <div class="progress" style="height: 4px; background-color: #222;">
+                                                <div class="progress-bar ${barColor}" style="width: ${h.starry_index}%"></div>
+                                            </div>
+                                        </div>
+                                        <div class="text-end" style="width: 80px;">
+                                            <i class="${h.icon_class} x-small me-1"></i>
+                                            <span class="small font-monospace">${h.starry_index}%</span>
+                                        </div>
+                                    </div>
+                                `;
+                                listEl.insertAdjacentHTML('beforeend', itemHtml);
+                            }
+                        });
+                    }
+                }
+
+                // Populate Sun/Moon
+                if (data.sun) {
+                    document.getElementById('swSun').innerHTML = `出: ${data.sun.sunrise}<br>入: ${data.sun.sunset}`;
+                }
+                if (data.moon) {
+                    document.getElementById('swMoon').innerHTML = `出: ${data.moon.moon_rise}<br>入: ${data.moon.moon_set} <span class="ms-1 text-secondary" style="font-size:0.7rem;">(月齢${data.moon.moon_age})</span>`;
+                }
+
+                infoEl.classList.remove('d-none');
+            })
+            .catch(err => {
+                loadingEl.classList.add('d-none');
+                errorEl.textContent = "通信エラー";
+                errorEl.classList.remove('d-none');
+            });
     };
 
     // Initialize tooltips

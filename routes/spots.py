@@ -1,4 +1,7 @@
-from flask import Blueprint, render_template
+from flask import Blueprint, render_template, request, jsonify
+from datetime import datetime
+from models.weather import get_weather_by_coords
+from models.astro_calc import get_sun_events_by_coords, get_moon_data_by_coords
 
 spots_bp = Blueprint('spots', __name__)
 
@@ -43,4 +46,27 @@ def spots():
             "rating": 3
         }
     ]
-    return render_template('spots.html', spots=mock_spots)
+    return render_template('spots.html', spots=mock_spots, today=datetime.now().strftime('%Y-%m-%d'))
+
+@spots_bp.route('/api/spots/weather')
+def get_spot_weather():
+    lat = request.args.get('lat', type=float)
+    lng = request.args.get('lng', type=float)
+    date_str = request.args.get('date')
+
+    if not lat or not lng or not date_str:
+        return jsonify({"error": "Missing parameters"}), 400
+
+    try:
+        # Fetch data using existing models
+        weather = get_weather_by_coords(lat, lng, date_str)
+        sun = get_sun_events_by_coords(lat, lng, date_str)
+        moon = get_moon_data_by_coords(lat, lng, date_str)
+
+        return jsonify({
+            "weather": weather,
+            "sun": sun,
+            "moon": moon
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
