@@ -100,7 +100,7 @@
                     </div>
 
                     <div>
-                        <p class="mb-2 small text-muted">星空指数</p>
+                        <p class="mb-2 small text-muted">星空指数 (現在: {{ weather_info.starry_index }}%)</p>
                         <div class="d-flex align-items-center">
                             <div class="flex-grow-1 me-3">
                                 <div class="progress" style="height: 10px; background-color: #333;">
@@ -113,15 +113,67 @@
                             </div>
                             <span
                                 class="badge {% if score_pct >= 80 %}bg-success{% elif score_pct >= 50 %}bg-info{% elif score_pct >= 30 %}bg-warning{% else %}bg-danger{% endif %} rounded-pill">
-                                指数: {{ score_pct }}%
+                                期待度: {{ score_pct }}%
                             </span>
                         </div>
                     </div>
+
+                    {% if weather_info.suggestion %}
+                    <div class="mt-4 p-3 rounded bg-opacity-10 bg-info border border-info border-opacity-25">
+                        <p class="mb-0 fw-bold text-info">
+                            <i class="fas fa-magic me-2"></i>{{ weather_info.suggestion }}
+                        </p>
+                    </div>
+                    {% endif %}
+
+                    {% if weather_info.hourly %}
+                    <div class="mt-3">
+                        <button class="btn btn-sm btn-outline-secondary w-100 border-0 text-muted" type="button"
+                            data-bs-toggle="collapse" data-bs-target="#hourlyWeather" aria-expanded="false"
+                            aria-controls="hourlyWeather">
+                            <i class="fas fa-chevron-down me-1"></i> 今夜の時系列データ (日没〜日の出) を表示
+                        </button>
+                        <div class="collapse mt-3" id="hourlyWeather">
+                            <div class="card card-body bg-dark border-secondary p-0 overflow-hidden"
+                                style="max-height: 300px; overflow-y: auto;">
+                                <div class="list-group list-group-flush">
+                                    {% for h in weather_info.hourly %}
+                                    {# 日没から翌朝までのデータを表示 (簡易的に17時から翌7時まで) #}
+                                    {% if (h.date == weather_info.hourly[0].date and h.hour >= 17) or (h.date !=
+                                    weather_info.hourly[0].date and h.hour <= 7) %} <div
+                                        class="list-group-item bg-dark text-white border-secondary border-opacity-50 py-2 d-flex justify-content-between align-items-center">
+                                        <div class="d-flex align-items-center" style="width: 80px;">
+                                            <span
+                                                class="small font-monospace {% if h.hour == 21 %}text-primary fw-bold{% else %}text-muted{% endif %}">{{
+                                                h.time }}</span>
+                                        </div>
+                                        <div class="flex-grow-1 px-3 d-flex align-items-center">
+                                            <div class="progress w-100" style="height: 6px; background-color: #222;">
+                                                <div class="progress-bar {% if h.starry_index >= 80 %}bg-success{% elif h.starry_index >= 50 %}bg-info{% elif h.starry_index >= 30 %}bg-warning{% else %}bg-danger{% endif %}"
+                                                    style="width: {{ h.starry_index }}%"></div>
+                                            </div>
+                                        </div>
+                                        <div class="text-end" style="width: 100px;">
+                                            <i class="{{ h.icon_class }} small me-2"></i>
+                                            <span class="small font-monospace">{{ h.starry_index }}%</span>
+                                        </div>
+                                </div>
+                                {% endif %}
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <div class="text-center mt-2">
+                            <small class="text-muted"><i
+                                    class="fas fa-info-circle me-1"></i>指数の詳細は各日の詳細ページでも確認できます。</small>
+                        </div>
+                    </div>
                 </div>
+                {% endif %}
             </div>
-            {% endif %}
         </div>
+        {% endif %}
     </div>
+</div>
 </div>
 
 <!-- 星空タイムライン (Starry Sky Timeline) -->

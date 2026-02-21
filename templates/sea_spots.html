@@ -229,6 +229,29 @@
                         </div>
                     </div>
 
+                    <!-- 追加: 星空アドバイスと時系列表示 -->
+                    <div id="starryAdviceArea" class="mb-4 d-none text-start">
+                        <div class="p-3 rounded bg-opacity-10 bg-info border border-info border-opacity-25 mb-3">
+                            <p class="mb-0 fw-bold text-info small" id="starrySuggestion">
+                                <i class="fas fa-magic me-2"></i>--
+                            </p>
+                        </div>
+                        <button
+                            class="btn btn-sm btn-outline-secondary w-100 border-secondary border-opacity-50 text-light"
+                            type="button" data-bs-toggle="collapse" data-bs-target="#hourlyTideWeather"
+                            aria-expanded="false">
+                            <i class="fas fa-chevron-down me-1"></i> 今夜の時系列データ (指数変化) を見る
+                        </button>
+                        <div class="collapse mt-2" id="hourlyTideWeather">
+                            <div class="card card-body bg-dark border-secondary p-0 overflow-hidden"
+                                style="max-height: 250px; overflow-y: auto;">
+                                <div class="list-group list-group-flush" id="hourlyTideList">
+                                    <!-- JSで動的に追加 -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <img id="tideImage" src="" class="img-fluid rounded border border-secondary shadow"
                         style="display:none; width: 100%;">
                 </div>
@@ -537,6 +560,7 @@
                     }
 
                     // Populate Weather
+                    const adviceEl = document.getElementById('starryAdviceArea');
                     if (data.weather) {
                         document.getElementById('awWeather').innerHTML = `<i class="${data.weather.icon_class} me-1"></i>${data.weather.condition}`;
 
@@ -544,9 +568,45 @@
                         if (data.weather.starry_index < 30) starryColor = 'text-danger';
                         else if (data.weather.starry_index < 70) starryColor = 'text-warning';
                         document.getElementById('awStarry').innerHTML = `<span class="${starryColor}">${data.weather.starry_index}</span> / 100`;
+
+                        // Suggestion
+                        if (data.weather.suggestion) {
+                            document.getElementById('starrySuggestion').innerHTML = `<i class="fas fa-magic me-2"></i>${data.weather.suggestion}`;
+                            adviceEl.classList.remove('d-none');
+                        }
+
+                        // Hourly List
+                        if (data.weather.hourly) {
+                            const listEl = document.getElementById('hourlyTideList');
+                            listEl.innerHTML = '';
+                            const targetDate = dateStr;
+                            data.weather.hourly.forEach(h => {
+                                // Filter tonight (17 PM to 7 AM next day)
+                                if ((h.date === targetDate && h.hour >= 17) || (h.date !== targetDate && h.hour <= 7)) {
+                                    const barColor = h.starry_index >= 80 ? 'bg-success' : (h.starry_index >= 50 ? 'bg-info' : (h.starry_index >= 30 ? 'bg-warning' : 'bg-danger'));
+                                    const timeColor = h.hour === 21 ? 'text-primary fw-bold' : 'text-muted';
+                                    const itemHtml = `
+                                        <div class="list-group-item bg-dark text-white border-secondary border-opacity-50 py-1 d-flex justify-content-between align-items-center">
+                                            <div style="width: 50px;"><span class="small font-monospace ${timeColor}">${h.time}</span></div>
+                                            <div class="flex-grow-1 px-3">
+                                                <div class="progress" style="height: 4px; background-color: #222;">
+                                                    <div class="progress-bar ${barColor}" style="width: ${h.starry_index}%"></div>
+                                                </div>
+                                            </div>
+                                            <div class="text-end" style="width: 80px;">
+                                                <i class="${h.icon_class} x-small me-1"></i>
+                                                <span class="small font-monospace">${h.starry_index}%</span>
+                                            </div>
+                                        </div>
+                                    `;
+                                    listEl.insertAdjacentHTML('beforeend', itemHtml);
+                                }
+                            });
+                        }
                     } else {
                         document.getElementById('awWeather').innerHTML = '-';
                         document.getElementById('awStarry').innerHTML = '-';
+                        adviceEl.classList.add('d-none');
                     }
 
                     // Populate Sun

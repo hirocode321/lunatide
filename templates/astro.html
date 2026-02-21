@@ -3,6 +3,29 @@
 {% block title %}月齢カレンダー{% endblock %}
 
 {% block content %}
+<style>
+    .rounded-bl {
+        border-bottom-left-radius: 12px !important;
+    }
+
+    .month-section h3 {
+        position: relative;
+        color: #fff;
+    }
+
+    .card-title {
+        color: #1a1f26;
+    }
+
+    .astro-card {
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .astro-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2) !important;
+    }
+</style>
 
 <!-- Main Content -->
 <main class="container my-5">
@@ -43,29 +66,46 @@
         {% endfor %}
     </div>
 
-    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
-        {% for event in events %}
-        <div class="col">
-            <div class="card h-100 border-light shadow-sm text-dark">
-                <div class="card-body d-flex flex-column">
-                    <div>
-                        <span class="badge mb-2 {% if event.badge == '月食' %}badge-lunar-eclipse{% elif event.badge == '流星群' %}badge-meteor-shower{% elif event.badge == '惑星観測' %}badge-planetary{% elif event.badge == '満月' %}badge-full-moon{% elif event.badge == 'レア現象' %}badge-rare{% else %}bg-primary{% endif %}">{{ event.badge }}</span>
-                        <h5 class="card-title">{{ event.title }}</h5>
-                        <p class="card-text">{{ event.description | truncate(60) }}</p>
+    {% for month, month_events in grouped_events.items() %}
+    <div class="month-section mb-5">
+        <h3 class="h4 border-start border-primary border-4 ps-3 mb-4">{{ month }}</h3>
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+            {% for event in month_events %}
+            <div class="col">
+                <div class="card h-100 border-light shadow-sm text-dark position-relative overflow-hidden astro-card">
+                    <!-- 日付表示 -->
+                    <div class="position-absolute top-0 end-0 bg-primary text-white px-3 py-1 small rounded-bl">
+                        <span class="fw-bold">{{ event.display_date }}</span>
+                        <span class="ms-1">({{ event.display_weekday }})</span>
                     </div>
-                    <div class="mt-auto pt-3 text-center">
-                        <a href="{{ url_for('astro.astroinfo', event=event.slug) }}"
-                            class="btn btn-outline-primary btn-sm px-4">詳しく見る</a>
+
+                    <div class="card-body d-flex flex-column pt-4">
+                        <div class="mt-2">
+                            <span
+                                class="badge mb-2 {% if event.badge == '月食' %}badge-lunar-eclipse{% elif event.badge == '流星群' %}badge-meteor-shower{% elif event.badge == '惑星観測' %}badge-planetary{% elif event.badge == '満月' %}badge-full-moon{% elif event.badge == 'レア現象' %}badge-rare{% else %}bg-primary{% endif %}">{{
+                                event.badge }}</span>
+                            <h5 class="card-title fw-bold">{{ event.title }}</h5>
+                            <p class="card-text text-muted small">{{ event.description | truncate(80) }}</p>
+                        </div>
+                        <div class="mt-auto pt-3">
+                            <a href="{{ url_for('astro.astroinfo', event=event.slug) }}"
+                                class="btn btn-sm btn-link text-primary p-0 fw-bold">
+                                詳しく見る <i class="fas fa-arrow-right ms-1"></i>
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
+            {% endfor %}
         </div>
-        {% else %}
-        <div class="col-12">
-            <p class="text-center">現在予定されている天体イベントはありません。</p>
-        </div>
-        {% endfor %}
     </div>
+    {% else %}
+    <div class="text-center my-5 py-5">
+        <i class="fas fa-search fa-3x text-light opacity-25 mb-3"></i>
+        <p class="text-secondary">現在予定されている天体イベントはありません。</p>
+        <a href="{{ url_for('astro.astro') }}" class="btn btn-outline-primary btn-sm rounded-pill mt-2">すべてのイベントを表示</a>
+    </div>
+    {% endfor %}
 </main>
 
 {% endblock %}

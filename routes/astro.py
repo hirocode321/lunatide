@@ -13,17 +13,36 @@ def astro():
     # conn.row_factory = sqlite3.Row  # Already set in get_db
     c = conn.cursor()
     
+    query = 'SELECT * FROM astro_events ORDER BY iso_date'
+    params = ()
     if category:
-        events = c.execute('SELECT * FROM astro_events WHERE badge = ? ORDER BY iso_date', (category,)).fetchall()
-    else:
-        events = c.execute('SELECT * FROM astro_events ORDER BY iso_date').fetchall()
+        query = 'SELECT * FROM astro_events WHERE badge = ? ORDER BY iso_date'
+        params = (category,)
         
+    raw_events = c.execute(query, params).fetchall()
+    
     # Get unique badges for filter buttons
     badges = [row[0] for row in c.execute('SELECT DISTINCT badge FROM astro_events').fetchall()]
     
+    # Parse and group by month
+    from datetime import datetime
+    grouped_events = {}
+    for event in raw_events:
+        dt = datetime.fromisoformat(event['iso_date'])
+        month_label = f"{dt.month}月"
+        if month_label not in grouped_events:
+            grouped_events[month_label] = []
+        
+        # Add a formatted date string for the template
+        event_dict = dict(event)
+        event_dict['display_date'] = dt.strftime('%m月%d日')
+        # Add weekday (optional but nice)
+        weekdays = ["月", "火", "水", "木", "金", "土", "日"]
+        event_dict['display_weekday'] = weekdays[dt.weekday()]
+        
+        grouped_events[month_label].append(event_dict)
     
-    # conn.close() - handled by teardown
-    return render_template('astro.html', events=events, badges=badges, current_category=category)
+    return render_template('astro.html', grouped_events=grouped_events, badges=badges, current_category=category)
 
 @astro_bp.route("/astroinfo")
 def astroinfo():

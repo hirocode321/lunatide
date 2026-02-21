@@ -88,10 +88,39 @@ WEATHER_CODE_MAP = {
     99: "雷雨 (大霰)"
 }
 
+                
+def calculate_starry_index(cloud_pct, code):
+    """雲量と天気コードから星空指数(0-100)を計算する共通ロジック"""
+    index = max(0, 100 - cloud_pct)
+    if code >= 50: # 雨、雪など
+        index = 0
+    elif code in [45, 48]: # 霧
+        index = min(index, 20)
+    elif code == 3: # 完全に曇り
+        index = min(index, 10)
+    elif code == 2: # 晴れ時々曇り
+        index = min(index, 60)
+    return index
+
+def get_weather_icon(code):
+    """天気コードに対応するFontAwesomeアイコンクラスを返す"""
+    if code <= 1:
+        return "fas fa-sun text-warning"
+    elif code == 2:
+        return "fas fa-cloud-sun text-warning"
+    elif code in [3, 45, 48]:
+        return "fas fa-cloud text-secondary"
+    elif 50 <= code <= 69 or 80 <= code <= 82:
+        return "fas fa-umbrella text-info"
+    elif 70 <= code <= 79 or 85 <= code <= 86:
+        return "fas fa-snowman text-light"
+    elif code >= 90:
+        return "fas fa-bolt text-danger"
+    return "fas fa-cloud-sun text-secondary"
+
 def get_weather_info(prefecture, date_str):
     """
-    指定された都道府県と日付の天気情報（雲量、天気内容）を取得する。
-    Open-Meteo APIを使用し、SQLiteデータベースに一時キャッシュする。
+    指定された都道府県と日付の天気情報（代表値および詳細な時系列データ）を取得する。
     """
     coords = PREFECTURE_COORDS.get(prefecture)
     if not coords:
@@ -102,7 +131,7 @@ def get_weather_info(prefecture, date_str):
         conn = get_moon_db()
         cursor = conn.cursor()
 
-        # 1. キャッシュの確認 (3時間以内のデータか)
+        # キャッシュの確認 (3時間以内のデータか)
         cursor.execute('''
             SELECT data_json, updated_at FROM weather_cache 
             WHERE prefecture = ? AND date_str = ?
@@ -110,28 +139,26 @@ def get_weather_info(prefecture, date_str):
         cached = cursor.fetchone()
         
         if cached:
-            # updated_at is stored as string 'YYYY-MM-DD HH:MM:SS'
-            updated_at = datetime.strptime(cached['updated_at'] if isinstance(cached, sqlite3.Row) else cached[1], '%Y-%m-%d %H:%M:%S')
-            # dict response is cached['data_json'] or cached[0]
+            updated_at_str = cached['updated_at'] if isinstance(cached, sqlite3.Row) else cached[1]
+            updated_at = datetime.strptime(updated_at_str, '%Y-%m-%d %H:%M:%S')
             data_json = cached['data_json'] if isinstance(cached, sqlite3.Row) else cached[0]
             
-            if (datetime.now() - updated_at).total_seconds() < 3 * 3600: # 3 hours
+            if (datetime.now() - updated_at).total_seconds() < 3 * 3600:
                 return json.loads(data_json)
 
-        # 2. API呼び出し (キャッシュがない、または古い場合)
-        # 日付が今日から11日以内なら予報、それ以外ならアーカイブ
+        # API呼び出し (1日分+翌日の一部を取得して夜間をカバー)
         target_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+        from datetime import timedelta
+        next_date_str = (target_date + timedelta(days=1)).strftime('%Y-%m-%d')
+        
         today = datetime.now().date()
         diff_days = (target_date - today).days
 
         if 0 <= diff_days <= 11:
-            # 予報 API (JMAモデル)
-            url = f"https://api.open-meteo.com/v1/forecast?latitude={coords['lat']}&longitude={coords['lng']}&hourly=cloud_cover,weather_code&models=jma&start_date={date_str}&end_date={date_str}&timezone=Asia%2FTokyo"
+            url = f"https://api.open-meteo.com/v1/forecast?latitude={coords['lat']}&longitude={coords['lng']}&hourly=cloud_cover,weather_code&models=jma&start_date={date_str}&end_date={next_date_str}&timezone=Asia%2FTokyo"
         elif diff_days < 0:
-            # 歴史的データ API
-            url = f"https://archive-api.open-meteo.com/v1/archive?latitude={coords['lat']}&longitude={coords['lng']}&start_date={date_str}&end_date={date_str}&hourly=cloud_cover,weather_code&timezone=Asia%2FTokyo"
+            url = f"https://archive-api.open-meteo.com/v1/archive?latitude={coords['lat']}&longitude={coords['lng']}&start_date={date_str}&end_date={next_date_str}&hourly=cloud_cover,weather_code&timezone=Asia%2FTokyo"
         else:
-            # Future beyond forecast limit
             return None
 
         response = requests.get(url, timeout=10)
@@ -139,66 +166,81 @@ def get_weather_info(prefecture, date_str):
         data = response.json()
 
         if "hourly" in data:
-            # 夜間（21時頃）の雲量を代表値として取得
+            times = data["hourly"].get("time", [])
             cloud_covers = data["hourly"].get("cloud_cover", [])
             weather_codes = data["hourly"].get("weather_code", [])
             
-            # 天体観測に重要な21時のデータ（インデックス21）を取得
-            idx = 21 if len(cloud_covers) > 21 else (len(cloud_covers) - 1)
+            hourly_data = []
+            best_index = -1
+            best_time = None
             
-            if idx >= 0:
-                cloud_pct = cloud_covers[idx]
-                code = weather_codes[idx]
+            # 日没から日の出まで（概算で18時から翌6時まで）のデータを抽出
+            # 正確な時間はastro_calcで計算するが、ここでは全データから指数を計算し、
+            # 21時を代表値、夜間で最高値を「コアタイム」とする
+            for i in range(len(times)):
+                dt = datetime.fromisoformat(times[i])
+                idx = calculate_starry_index(cloud_covers[i], weather_codes[i])
+                icon = get_weather_icon(weather_codes[i])
                 
-                # 星空指数 (0 - 100) の計算
-                # 基本は (100 - 雲量) だが、悪天候の場合は下げる
-                starry_index = max(0, 100 - cloud_pct)
-                if code >= 50: # 雨、雪など
-                    starry_index = 0
-                elif code in [45, 48]: # 霧
-                    starry_index = min(starry_index, 20)
-                elif code == 3: # 完全に曇り
-                    starry_index = min(starry_index, 10)
-                elif code == 2: # 晴れ時々曇り
-                    starry_index = min(starry_index, 60)
-
-                # 天気アイコンの設定 (FontAwesome)
-                if code <= 1:
-                    icon_class = "fas fa-sun text-warning"
-                elif code == 2:
-                    icon_class = "fas fa-cloud-sun text-warning"
-                elif code in [3, 45, 48]:
-                    icon_class = "fas fa-cloud text-secondary"
-                elif 50 <= code <= 69 or 80 <= code <= 82:
-                    icon_class = "fas fa-umbrella text-info"
-                elif 70 <= code <= 79 or 85 <= code <= 86:
-                    icon_class = "fas fa-snowman text-light"
-                elif code >= 90:
-                    icon_class = "fas fa-bolt text-danger"
-                else:
-                    icon_class = "fas fa-cloud-sun text-secondary"
-                
-                result = {
-                    "cloud_cover": cloud_pct,
-                    "condition": WEATHER_CODE_MAP.get(code, "不明"),
-                    "starry_index": starry_index,
-                    "icon_class": icon_class,
-                    "time": "21:00"
+                h_item = {
+                    "time": dt.strftime('%H:%M'),
+                    "hour": dt.hour,
+                    "date": dt.strftime('%Y-%m-%d'),
+                    "starry_index": idx,
+                    "cloud_cover": cloud_covers[i],
+                    "condition": WEATHER_CODE_MAP.get(weather_codes[i], "不明"),
+                    "icon_class": icon
                 }
+                hourly_data.append(h_item)
+                
+                # 「コアタイム」の計算（今夜18時〜翌日6時の中で最高指数を探す）
+                # 簡略化：取得した48時間分の中から夜間（18時以降から翌朝まで）を対象
+                if (dt.date() == target_date and dt.hour >= 18) or (dt.date() > target_date and dt.hour <= 6):
+                    if idx > best_index:
+                        best_index = idx
+                        best_time = dt
 
-                # 3. キャッシュの更新
-                try:
-                    cursor.execute('''
-                        INSERT INTO weather_cache (prefecture, date_str, data_json, updated_at)
-                        VALUES (?, ?, ?, CURRENT_TIMESTAMP)
-                        ON CONFLICT(prefecture, date_str) 
-                        DO UPDATE SET data_json = excluded.data_json, updated_at = CURRENT_TIMESTAMP
-                    ''', (prefecture, date_str, json.dumps(result)))
-                    conn.commit()
-                except Exception as db_e:
-                    print(f"Weather Cache DB Error: {db_e}")
+            # 代表値（21時）を取得
+            rep_idx = 21 # Default to index 21 of the first day
+            if len(hourly_data) > 21:
+                rep_data = hourly_data[21]
+            else:
+                rep_data = hourly_data[0]
 
-                return result
+            # 推奨メッセージの作成
+            suggestion = "今夜は観測が難しいかもしれません。"
+            if best_index >= 80:
+                suggestion = f"今夜は {best_time.hour}時頃からが絶好のチャンスです！"
+            elif best_index >= 50:
+                suggestion = f"今夜の狙い目は {best_time.hour}時頃です。"
+            elif best_index > 0:
+                suggestion = f"{best_time.hour}時頃に雲の切れ間があるかもしれません。"
+
+            result = {
+                "cloud_cover": rep_data["cloud_cover"],
+                "condition": rep_data["condition"],
+                "starry_index": rep_data["starry_index"],
+                "icon_class": rep_data["icon_class"],
+                "time": rep_data["time"],
+                "best_time": best_time.strftime('%H:%M') if best_time else None,
+                "best_index": best_index,
+                "suggestion": suggestion,
+                "hourly": hourly_data
+            }
+
+            # キャッシュの更新
+            try:
+                cursor.execute('''
+                    INSERT INTO weather_cache (prefecture, date_str, data_json, updated_at)
+                    VALUES (?, ?, ?, CURRENT_TIMESTAMP)
+                    ON CONFLICT(prefecture, date_str) 
+                    DO UPDATE SET data_json = excluded.data_json, updated_at = CURRENT_TIMESTAMP
+                ''', (prefecture, date_str, json.dumps(result)))
+                conn.commit()
+            except Exception as db_e:
+                print(f"Weather Cache DB Error: {db_e}")
+
+            return result
 
     except Exception as e:
         print(f"Weather API/Cache Error: {e}")
@@ -207,23 +249,21 @@ def get_weather_info(prefecture, date_str):
 
 def get_weather_by_coords(lat, lng, date_str):
     """
-    指定された緯度経度と日付の天気情報（雲量、天気内容）を取得する。
-    Open-Meteo APIを使用する。(キャッシュなしの動的取得版)
-    主に「海辺の撮影地マップ」にて、任意の地点の詳細情報を表示する際に利用される。
+    指定された緯度経度と日付の天気情報（代表値および詳細な時系列データ）を取得する。(キャッシュなし)
     """
     try:
-        # 要求された日付と現在日との差分日数を計算
         target_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+        from datetime import timedelta
+        next_date_str = (target_date + timedelta(days=1)).strftime('%Y-%m-%d')
+        
         today = datetime.now().date()
         diff_days = (target_date - today).days
 
-        # 11日以内なら詳細な予報API(JMAモデル)を使用し、過去の日付ならアーカイブデータAPIを使用する。
         if 0 <= diff_days <= 11:
-            url = f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lng}&hourly=cloud_cover,weather_code&models=jma&start_date={date_str}&end_date={date_str}&timezone=Asia%2FTokyo"
+            url = f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lng}&hourly=cloud_cover,weather_code&models=jma&start_date={date_str}&end_date={next_date_str}&timezone=Asia%2FTokyo"
         elif diff_days < 0:
-            url = f"https://archive-api.open-meteo.com/v1/archive?latitude={lat}&longitude={lng}&start_date={date_str}&end_date={date_str}&hourly=cloud_cover,weather_code&timezone=Asia%2FTokyo"
+            url = f"https://archive-api.open-meteo.com/v1/archive?latitude={lat}&longitude={lng}&start_date={date_str}&end_date={next_date_str}&hourly=cloud_cover,weather_code&timezone=Asia%2FTokyo"
         else:
-            # Date is too far in the future for forecast, and cannot be in archive
             return None
 
         response = requests.get(url, timeout=10)
@@ -231,50 +271,55 @@ def get_weather_by_coords(lat, lng, date_str):
         data = response.json()
 
         if "hourly" in data:
+            times = data["hourly"].get("time", [])
             cloud_covers = data["hourly"].get("cloud_cover", [])
             weather_codes = data["hourly"].get("weather_code", [])
             
-            # 天体観測の指標として、夜間（21時）のデータを代表値として採用する。
-            idx = 21 if len(cloud_covers) > 21 else (len(cloud_covers) - 1)
+            hourly_data = []
+            best_index = -1
+            best_time = None
             
-            if idx >= 0:
-                cloud_pct = cloud_covers[idx]
-                code = weather_codes[idx]
+            for i in range(len(times)):
+                dt = datetime.fromisoformat(times[i])
+                idx = calculate_starry_index(cloud_covers[i], weather_codes[i])
                 
-                # 星空指数 (0 - 100) の計算
-                # 雲量が少ないほど100に近づくが、雨や霧などの悪天候時は強制的に指数を下げる独自のロジック。
-                starry_index = max(0, 100 - cloud_pct)
-                if code >= 50:
-                    starry_index = 0
-                elif code in [45, 48]:
-                    starry_index = min(starry_index, 20)
-                elif code == 3:
-                    starry_index = min(starry_index, 10)
-                elif code == 2:
-                    starry_index = min(starry_index, 60)
-
-                if code <= 1:
-                    icon_class = "fas fa-sun text-warning"
-                elif code == 2:
-                    icon_class = "fas fa-cloud-sun text-warning"
-                elif code in [3, 45, 48]:
-                    icon_class = "fas fa-cloud text-secondary"
-                elif 50 <= code <= 69 or 80 <= code <= 82:
-                    icon_class = "fas fa-umbrella text-info"
-                elif 70 <= code <= 79 or 85 <= code <= 86:
-                    icon_class = "fas fa-snowman text-light"
-                elif code >= 90:
-                    icon_class = "fas fa-bolt text-danger"
-                else:
-                    icon_class = "fas fa-cloud-sun text-secondary"
-                
-                return {
-                    "cloud_cover": cloud_pct,
-                    "condition": WEATHER_CODE_MAP.get(code, "不明"),
-                    "starry_index": starry_index,
-                    "icon_class": icon_class,
-                    "time": "21:00"
+                h_item = {
+                    "time": dt.strftime('%H:%M'),
+                    "hour": dt.hour,
+                    "date": dt.strftime('%Y-%m-%d'),
+                    "starry_index": idx,
+                    "cloud_cover": cloud_covers[i],
+                    "condition": WEATHER_CODE_MAP.get(weather_codes[i], "不明"),
+                    "icon_class": get_weather_icon(weather_codes[i])
                 }
+                hourly_data.append(h_item)
+                
+                if (dt.date() == target_date and dt.hour >= 18) or (dt.date() > target_date and dt.hour <= 6):
+                    if idx > best_index:
+                        best_index = idx
+                        best_time = dt
+
+            rep_data = hourly_data[21] if len(hourly_data) > 21 else hourly_data[0]
+
+            suggestion = "今夜は観測が難しいかもしれません。"
+            if best_index >= 80:
+                suggestion = f"今夜は {best_time.hour}時頃からが絶好のチャンスです！"
+            elif best_index >= 50:
+                suggestion = f"今夜の狙い目は {best_time.hour}時頃です。"
+            elif best_index > 0:
+                suggestion = f"{best_time.hour}時頃に雲の切れ間があるかもしれません。"
+
+            return {
+                "cloud_cover": rep_data["cloud_cover"],
+                "condition": rep_data["condition"],
+                "starry_index": rep_data["starry_index"],
+                "icon_class": rep_data["icon_class"],
+                "time": rep_data["time"],
+                "best_time": best_time.strftime('%H:%M') if best_time else None,
+                "best_index": best_index,
+                "suggestion": suggestion,
+                "hourly": hourly_data
+            }
     except Exception as e:
         print(f"Weather API by coords Error: {e}")
     

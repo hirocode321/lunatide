@@ -126,6 +126,10 @@ def index():
     # Weather Info for Today (Preferred Location)
     weather_info = get_weather_info(pref_location, today.strftime('%Y-%m-%d'))
 
+    # Sun events for hourly bounding
+    from models.astro_calc import get_sun_events
+    sun_events = get_sun_events(pref_location, today.strftime('%Y-%m-%d'))
+
     # Timeline Events
     from models.astro_calc import get_timeline_events
     timeline_events = get_timeline_events(pref_location, today.strftime('%Y-%m-%d'))
@@ -155,6 +159,7 @@ def index():
         tomorrow_event=tomorrow_event,
         photo_potential=photo_potential,
         weather_info=weather_info,
+        sun_events=sun_events,
         timeline_events=timeline_events,
         pref_location=pref_location,
         all_prefectures=all_prefectures,
