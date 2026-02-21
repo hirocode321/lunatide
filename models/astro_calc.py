@@ -116,6 +116,48 @@ def get_sun_events(prefecture_name, date_str):
         
     return res
 
+def get_sun_events_by_coords(lat, lon, date_str):
+    location = wgs84.latlon(lat, lon)
+    
+    try:
+        dt = datetime.strptime(date_str, '%Y-%m-%d')
+    except ValueError:
+        return None
+        
+    t0 = ts.from_datetime(dt.replace(tzinfo=tz))
+    t1 = ts.from_datetime((dt + timedelta(days=1)).replace(tzinfo=tz))
+    
+    f = almanac.dark_twilight_day(eph, location)
+    times, events = almanac.find_discrete(t0, t1, f)
+    
+    res = {
+        'sunrise': '-', 'sunset': '-',
+        'civil_dawn': '-', 'civil_dusk': '-',
+        'nautical_dawn': '-', 'nautical_dusk': '-',
+        'astro_dawn': '-', 'astro_dusk': '-',
+        '撮影可能時間帯': '-'
+    }
+    
+    prev_event = f(t0).item()
+    for t, event in zip(times, events):
+        time_str = t.astimezone(tz).strftime('%H:%M')
+        if prev_event == 0 and event == 1: res['astro_dawn'] = time_str
+        elif prev_event == 1 and event == 2: res['nautical_dawn'] = time_str
+        elif prev_event == 2 and event == 3: res['civil_dawn'] = time_str
+        elif prev_event == 3 and event == 4: res['sunrise'] = time_str
+        elif prev_event == 4 and event == 3: res['sunset'] = time_str
+        elif prev_event == 3 and event == 2: res['civil_dusk'] = time_str
+        elif prev_event == 2 and event == 1: res['nautical_dusk'] = time_str
+        elif prev_event == 1 and event == 0: res['astro_dusk'] = time_str
+        prev_event = event
+
+    if res['astro_dusk'] != '-' and res['astro_dawn'] != '-':
+        res['撮影可能時間帯'] = f"18時以降から早朝まで (特に {res['astro_dusk']} 以降 ～ 翌 {res['astro_dawn']} 前)"
+    elif res['astro_dusk'] != '-':
+        res['撮影可能時間帯'] = f"{res['astro_dusk']} 以降"
+        
+    return res
+
 def get_moon_data(prefecture_name, date_str):
     """Calculate Moon age, moonrise, and moonset for a single day."""
     if prefecture_name not in PREF_COORDS:
@@ -152,6 +194,42 @@ def get_moon_data(prefecture_name, date_str):
     phase_degrees = almanac.moon_phase(eph, t_noon).degrees
     # Convert degrees (0-360) to days (0-29.53)
     # Synodic month is approx 29.530588 days
+    age = (phase_degrees / 360.0) * 29.530588
+    
+    return {
+        'moon_age': f"{age:.1f}",
+        'moon_rise': moon_rise,
+        'moon_set': moon_set
+    }
+
+def get_moon_data_by_coords(lat, lon, date_str):
+    """Calculate Moon age, moonrise, and moonset directly by coordinates."""
+    location = wgs84.latlon(lat, lon)
+    
+    try:
+        dt = datetime.strptime(date_str, '%Y-%m-%d')
+    except ValueError:
+        return {'moon_age': '-', 'moon_rise': '-', 'moon_set': '-'}
+        
+    t0 = ts.from_datetime(dt.replace(hour=0, minute=0, second=0, tzinfo=tz))
+    t1 = ts.from_datetime((dt + timedelta(days=1)).replace(hour=0, minute=0, second=0, tzinfo=tz))
+    
+    f = almanac.risings_and_settings(eph, eph['moon'], location)
+    times, events = almanac.find_discrete(t0, t1, f)
+    
+    moon_rise = '-'
+    moon_set = '-'
+    
+    for t, event in zip(times, events):
+        time_str = t.astimezone(tz).strftime('%H:%M')
+        if event == 1:
+            moon_rise = time_str
+        elif event == 0:
+            moon_set = time_str
+            
+    dt_noon = dt.replace(hour=12, minute=0, second=0, tzinfo=tz)
+    t_noon = ts.from_datetime(dt_noon)
+    phase_degrees = almanac.moon_phase(eph, t_noon).degrees
     age = (phase_degrees / 360.0) * 29.530588
     
     return {

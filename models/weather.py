@@ -122,9 +122,12 @@ def get_weather_info(prefecture, date_str):
         if 0 <= diff_days <= 11:
             # 予報 API (JMAモデル)
             url = f"https://api.open-meteo.com/v1/forecast?latitude={coords['lat']}&longitude={coords['lng']}&hourly=cloud_cover,weather_code&models=jma&start_date={date_str}&end_date={date_str}&timezone=Asia%2FTokyo"
-        else:
+        elif diff_days < 0:
             # 歴史的データ API
             url = f"https://archive-api.open-meteo.com/v1/archive?latitude={coords['lat']}&longitude={coords['lng']}&start_date={date_str}&end_date={date_str}&hourly=cloud_cover,weather_code&timezone=Asia%2FTokyo"
+        else:
+            # Future beyond forecast limit
+            return None
 
         response = requests.get(url, timeout=10)
         response.raise_for_status()
@@ -196,3 +199,73 @@ def get_weather_info(prefecture, date_str):
         print(f"Weather API/Cache Error: {e}")
     
     return None
+
+def get_weather_by_coords(lat, lng, date_str):
+    """
+    指定された緯度経度と日付の天気情報（雲量、天気内容）を取得する。
+    Open-Meteo APIを使用する。(キャッシュなしの簡易版)
+    """
+    try:
+        target_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+        today = datetime.now().date()
+        diff_days = (target_date - today).days
+
+        if 0 <= diff_days <= 11:
+            url = f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lng}&hourly=cloud_cover,weather_code&models=jma&start_date={date_str}&end_date={date_str}&timezone=Asia%2FTokyo"
+        elif diff_days < 0:
+            url = f"https://archive-api.open-meteo.com/v1/archive?latitude={lat}&longitude={lng}&start_date={date_str}&end_date={date_str}&hourly=cloud_cover,weather_code&timezone=Asia%2FTokyo"
+        else:
+            # Date is too far in the future for forecast, and cannot be in archive
+            return None
+
+        response = requests.get(url, timeout=10)
+        response.raise_for_status()
+        data = response.json()
+
+        if "hourly" in data:
+            cloud_covers = data["hourly"].get("cloud_cover", [])
+            weather_codes = data["hourly"].get("weather_code", [])
+            
+            idx = 21 if len(cloud_covers) > 21 else (len(cloud_covers) - 1)
+            
+            if idx >= 0:
+                cloud_pct = cloud_covers[idx]
+                code = weather_codes[idx]
+                
+                starry_index = max(0, 100 - cloud_pct)
+                if code >= 50:
+                    starry_index = 0
+                elif code in [45, 48]:
+                    starry_index = min(starry_index, 20)
+                elif code == 3:
+                    starry_index = min(starry_index, 10)
+                elif code == 2:
+                    starry_index = min(starry_index, 60)
+
+                if code <= 1:
+                    icon_class = "fas fa-sun text-warning"
+                elif code == 2:
+                    icon_class = "fas fa-cloud-sun text-warning"
+                elif code in [3, 45, 48]:
+                    icon_class = "fas fa-cloud text-secondary"
+                elif 50 <= code <= 69 or 80 <= code <= 82:
+                    icon_class = "fas fa-umbrella text-info"
+                elif 70 <= code <= 79 or 85 <= code <= 86:
+                    icon_class = "fas fa-snowman text-light"
+                elif code >= 90:
+                    icon_class = "fas fa-bolt text-danger"
+                else:
+                    icon_class = "fas fa-cloud-sun text-secondary"
+                
+                return {
+                    "cloud_cover": cloud_pct,
+                    "condition": WEATHER_CODE_MAP.get(code, "不明"),
+                    "starry_index": starry_index,
+                    "icon_class": icon_class,
+                    "time": "21:00"
+                }
+    except Exception as e:
+        print(f"Weather API by coords Error: {e}")
+    
+    return None
+
