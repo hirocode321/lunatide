@@ -1,141 +1,171 @@
 {% extends "base.html" %}
 
-{% block title %}月齢カレンダー{% endblock %}
+{% block title %}月詳細情報 | {{ selected_date }}{% endblock %}
 
 {% block content %}
-<div class="container my-4">
-    <h1 class="text-center">月齢カレンダー</h1>
-    {% if moon_data %}
-    <div class="text-center my-4">
-        <!-- 月齢画像 -->
-        <img src="{{ url_for('static', filename=moon_image) }}" alt="月画像" class="img-fluid">
-    </div>
-    <div class="text-center my-4">
-        <p><strong>都道府県:</strong> {{ prefecture }}</p>
-        <p><strong>日付:</strong> {{ selected_date }}</p>
-        <p><strong>月齢:</strong> {{ moon_data['月齢'] }}</p>
-        <p><strong>月の出:</strong> {{ moon_data['月の出'] }}</p>
-        <p><strong>月の入:</strong> {{ moon_data['月の入'] }}</p>
+<div class="container my-5 fade-in">
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('main.index') }}">カレンダー</a></li>
+            <li class="breadcrumb-item active text-light" aria-current="page">{{ selected_date }} 記録</li>
+        </ol>
+    </nav>
+
+    <div class="text-center mb-5">
+        <h1 class="display-6 fw-bold">{{ selected_date }}</h1>
+        <p class="text-secondary"><i class="fas fa-location-dot me-2"></i>{{ prefecture }} の観測情報</p>
     </div>
 
-    <!-- 気象情報セクション -->
-    {% if weather_info %}
-    <div class="row justify-content-center my-4">
-        <div class="col-md-6">
-            <div class="card bg-dark text-white border-secondary shadow-sm">
-                <div class="card-header border-secondary bg-transparent">
-                    <h5 class="card-title mb-0"><i class="{{ weather_info.icon_class }} me-2"></i>観測ポイント予測 ({{
-                        weather_info.time }})</h5>
-                </div>
+    <div class="row g-4 justify-content-center">
+        <!-- Moon Phase Card -->
+        <div class="col-lg-5">
+            <div class="card h-100 border-0 shadow-lg text-center p-4"
+                style="background: linear-gradient(145deg, rgba(20, 20, 40, 0.9), rgba(40, 40, 80, 0.4));">
                 <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <div>
-                            <p class="mb-1 text-muted small">天気概況</p>
-                            <h4 class="mb-0">{{ weather_info.condition }}</h4>
-                        </div>
-                        <div class="text-end">
-                            <p class="mb-1 text-muted small">雲量</p>
-                            <h4 class="mb-0">{{ weather_info.cloud_cover }}%</h4>
-                        </div>
+                    <h5 class="card-title mb-4 text-primary"><i class="fas fa-moon me-2"></i>今日の月相</h5>
+                    <div class="moon-display-container my-4">
+                        <div class="moon-glow"></div>
+                        <img src="{{ url_for('static', filename=moon_image) }}" alt="月画像" class="img-fluid"
+                            style="width: 180px; filter: drop-shadow(0 0 20px rgba(255,255,255,0.2));">
                     </div>
-
+                    {% if moon_data %}
                     <div class="mt-4">
-                        <p class="mb-2 small">星空指数</p>
-                        <div class="d-flex align-items-center">
-                            <div class="flex-grow-1 me-3">
-                                <div class="progress" style="height: 10px; background-color: #333;">
-                                    {% set score_pct = weather_info.starry_index %}
-                                    <div class="progress-bar {% if score_pct >= 80 %}bg-success{% elif score_pct >= 50 %}bg-info{% elif score_pct >= 30 %}bg-warning{% else %}bg-danger{% endif %}"
-                                        role="progressbar" style="width: {{ score_pct }}%"
-                                        aria-valuenow="{{ score_pct }}" aria-valuemin="0" aria-valuemax="100"></div>
+                        <div class="display-6 font-monospace text-light mb-1">{{ moon_data['月齢'] }}</div>
+                        <div class="text-muted small mb-4">月齢</div>
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <div class="p-3 rounded bg-white bg-opacity-5">
+                                    <div class="text-muted small mb-1">月の出</div>
+                                    <div class="h5 mb-0">{{ moon_data['月の出'] }}</div>
                                 </div>
                             </div>
-                            <span
-                                class="badge {% if score_pct >= 80 %}bg-success{% elif score_pct >= 50 %}bg-info{% elif score_pct >= 30 %}bg-warning{% else %}bg-danger{% endif %} rounded-pill">
-                                指数: {{ score_pct }}%
-                            </span>
+                            <div class="col-6">
+                                <div class="p-3 rounded bg-white bg-opacity-5">
+                                    <div class="text-muted small mb-1">月の入</div>
+                                    <div class="h5 mb-0">{{ moon_data['月の入'] }}</div>
+                                </div>
+                            </div>
                         </div>
-                        <p class="mt-2 mb-0 small text-muted">※21時時点の予測データに基づいています。0に近いほど雲が多く、観測に不向きです。</p>
                     </div>
+                    {% else %}
+                    <p class="text-muted">月齢データがありません</p>
+                    {% endif %}
                 </div>
             </div>
         </div>
-    </div>
-    {% endif %}
 
+        <!-- Weather & Stars Card -->
+        <div class="col-lg-5">
+            {% if weather_info %}
+            <div class="card border-0 shadow-lg mb-4" style="background: rgba(13, 110, 253, 0.05);">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h5 class="card-title mb-0 text-primary"><i class="{{ weather_info.icon_class }} me-2"></i>気象予測
+                        </h5>
+                        <span
+                            class="badge bg-primary bg-opacity-25 text-primary border border-primary border-opacity-50">21:00時点</span>
+                    </div>
 
-    <!-- 太陽・薄明情報セクション -->
-    {% if sun_events %}
-    <div class="row justify-content-center my-4">
-        <div class="col-md-6">
-            <div class="card bg-dark text-white border-secondary shadow-sm">
-                <div class="card-header border-secondary bg-transparent">
-                    <h5 class="card-title mb-0"><i class="fas fa-sun text-warning me-2"></i>太陽・トワイライト情報</h5>
+                    <div class="row mb-4">
+                        <div class="col-6">
+                            <p class="mb-1 text-muted small">天気</p>
+                            <h4 class="mb-0 text-light">{{ weather_info.condition }}</h4>
+                        </div>
+                        <div class="col-6 text-end">
+                            <p class="mb-1 text-muted small">雲量</p>
+                            <h4 class="mb-0 text-light">{{ weather_info.cloud_cover }}%</h4>
+                        </div>
+                    </div>
+
+                    <div class="p-4 rounded-4 bg-dark bg-opacity-50 border border-secondary border-opacity-25 mb-3">
+                        <div class="d-flex justify-content-between align-items-end mb-2">
+                            <div>
+                                <h6 class="mb-0 text-info">星空指数</h6>
+                                <small class="text-muted">観測の期待値</small>
+                            </div>
+                            <div class="h3 mb-0 text-info font-monospace">{{ weather_info.starry_index }}%</div>
+                        </div>
+                        <div class="progress" style="height: 8px; background: rgba(255,255,255,0.1);">
+                            {% set s_pct = weather_info.starry_index %}
+                            <div class="progress-bar {% if s_pct >= 80 %}bg-success{% elif s_pct >= 50 %}bg-info{% elif s_pct >= 30 %}bg-warning{% else %}bg-danger{% endif %}"
+                                style="width: {{ s_pct }}%"></div>
+                        </div>
+                    </div>
+                    {% if weather_info.suggestion %}
+                    <div class="small p-3 rounded bg-info bg-opacity-10 border border-info border-opacity-25">
+                        <i class="fas fa-lightbulb text-info me-2"></i>{{ weather_info.suggestion }}
+                    </div>
+                    {% endif %}
                 </div>
-                <div class="card-body">
-                    <div class="row text-center mb-3">
-                        <div class="col-6 border-end border-secondary">
-                            <p class="mb-1 text-muted small"><i class="fas fa-arrow-up me-1"></i>日の出</p>
-                            <h4 class="mb-0 text-warning">{{ sun_events.sunrise }}</h4>
+            </div>
+            {% endif %}
+
+            {% if sun_events %}
+            <div class="card border-0 shadow-lg" style="background: rgba(255, 193, 7, 0.05);">
+                <div class="card-body p-4">
+                    <h5 class="card-title mb-4 text-warning"><i class="fas fa-sun me-2"></i>トワイライト</h5>
+                    <div class="row text-center g-3 mb-4">
+                        <div class="col-6">
+                            <div class="p-3 rounded bg-white bg-opacity-5 border border-warning border-opacity-10">
+                                <div class="text-muted small mb-1">日の出</div>
+                                <div class="h5 mb-0 text-warning">{{ sun_events.sunrise }}</div>
+                            </div>
                         </div>
                         <div class="col-6">
-                            <p class="mb-1 text-muted small"><i class="fas fa-arrow-down me-1"></i>日の入</p>
-                            <h4 class="mb-0 text-warning">{{ sun_events.sunset }}</h4>
-                        </div>
-                    </div>
-                    <div class="p-2 bg-secondary bg-opacity-10 rounded text-center small mb-3">
-                        <div class="row">
-                            <div class="col-4 border-end border-secondary">
-                                <span class="text-muted d-block" style="font-size: 0.7rem;">常用薄明</span>
-                                <span>{{ sun_events.civil_dusk }}</span>
-                            </div>
-                            <div class="col-4 border-end border-secondary">
-                                <span class="text-muted d-block" style="font-size: 0.7rem;">航海薄明</span>
-                                <span>{{ sun_events.nautical_dusk }}</span>
-                            </div>
-                            <div class="col-4">
-                                <span class="text-muted d-block" style="font-size: 0.7rem;">天文薄明終了</span>
-                                <span class="text-info">{{ sun_events.astro_dusk }}</span>
+                            <div class="p-3 rounded bg-white bg-opacity-5 border border-warning border-opacity-10">
+                                <div class="text-muted small mb-1">日の入</div>
+                                <div class="h5 mb-0 text-warning">{{ sun_events.sunset }}</div>
                             </div>
                         </div>
                     </div>
-                    <div class="p-2 bg-black rounded border border-primary text-center">
-                        <span class="text-primary small" style="font-size: 0.8rem;"><i
-                                class="fas fa-camera me-1"></i>星空撮影の推奨時間帯</span>
-                        <div class="fw-bold mt-1 small">{{ sun_events.撮影可能時間帯 }}</div>
+                    <div
+                        class="p-3 rounded-4 bg-black bg-opacity-40 border border-primary border-opacity-25 text-center">
+                        <div class="small text-primary mb-2 fw-bold"><i class="fas fa-camera me-2"></i>フォトグラファー向け推奨時間
+                        </div>
+                        <div class="h5 mb-0 text-light font-monospace">{{ sun_events.撮影可能時間帯 }}</div>
+                        <div class="text-muted x-small mt-2">天文薄明終了から日の出前まで</div>
                     </div>
                 </div>
             </div>
+            {% endif %}
         </div>
     </div>
-    {% endif %}
 
-    {% else %}
-    <p class="text-center">情報が見つかりませんでした。再度選択してください。</p>
-    {% endif %}
-
-    <form action="{{ url_for('moon.moon_calendar') }}" method="POST" class="text-center my-4">
-        <div class="row justify-content-center">
-            <!-- 都道府県選択 -->
-            <div class="col-auto">
-                <select name="prefecture" class="form-select" required>
-                    <option value="" disabled selected>都道府県を選択</option>
-                    {% for pref in prefectures %}
-                    <option value="{{ pref }}" {% if pref==prefecture %}selected{% endif %}>{{ pref }}</option>
-                    {% endfor %}
-                </select>
+    <!-- Selection Form -->
+    <div class="mt-5 p-5 card bg-dark border-0 shadow-lg text-center" style="border-radius: 30px;">
+        <h3 class="h4 mb-4">他の日をチェックする</h3>
+        <form action="{{ url_for('moon.moon_calendar') }}" method="POST">
+            <div class="row g-3 justify-content-center">
+                <div class="col-md-4">
+                    <select name="prefecture" class="form-select bg-dark text-white border-secondary" required>
+                        {% for pref in prefectures %}
+                        <option value="{{ pref }}" {% if pref==prefecture %}selected{% endif %}>{{ pref }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <input type="date" name="date" class="form-control bg-dark text-white border-secondary"
+                        value="{{ selected_date }}" required>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100">更新 <i class="fas fa-sync-alt ms-1"></i></button>
+                </div>
             </div>
-
-            <!-- 日付選択 -->
-            <div class="col-auto">
-                <input type="date" name="date" class="form-control" value="{{ selected_date }}" required>
-            </div>
-
-            <!-- 確認ボタン -->
-            <div class="col-auto">
-                <button type="submit" class="btn btn-primary">確認</button>
-            </div>
-        </div>
-    </form>
+        </form>
+    </div>
 </div>
+
+<style>
+    .x-small {
+        font-size: 0.7rem;
+    }
+
+    .breadcrumb-item+.breadcrumb-item::before {
+        color: rgba(255, 255, 255, 0.3);
+    }
+
+    .display-6 {
+        letter-spacing: -1px;
+    }
+</style>
 {% endblock %}

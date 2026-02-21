@@ -243,12 +243,17 @@
                 {% if moon_images[loop.index0] %}
                 <img src="{{ url_for('static', filename=moon_images[loop.index0]) }}" alt="Moon Phase"
                     class="moon-img-sm">
-                <div class="moon-age-text d-none d-md-block">{{ moon_ages[loop.index0] }}</div>
-                {% if moon_rises[loop.index0] %}
-                <div class="text-secondary mt-1" style="font-size: 0.75rem;">
-                    <i class="fas fa-arrow-up fa-xs"></i> {{ moon_rises[loop.index0] }}
+                <div class="moon-details flex-grow-1">
+                    <div class="moon-age-text">
+                        <span class="d-md-none text-muted me-1">月齢:</span>{{ moon_ages[loop.index0] }}
+                    </div>
+                    {% if moon_rises[loop.index0] %}
+                    <div class="text-secondary mt-1" style="font-size: 0.75rem;">
+                        <i class="fas fa-arrow-up fa-xs me-1"></i><span class="d-md-none">月の出 </span>{{
+                        moon_rises[loop.index0] }}
+                    </div>
+                    {% endif %}
                 </div>
-                {% endif %}
                 {% else %}
                 <div style="height: 32px;"></div>
                 {% endif %}

@@ -33,13 +33,14 @@
 <body class="fade-in">
     <canvas id="starfield"></canvas>
     <!-- Header -->
-    <header>
-        <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-            <div class="container-fluid">
-                <a class="navbar-brand" href="{{ url_for('main.index') }}">
-                    Astro Navigator
+    <header class="sticky-top">
+        <nav class="navbar navbar-expand-lg navbar-dark border-bottom border-white border-opacity-10 shadow-sm"
+            style="background: rgba(9, 7, 27, 0.8) !important; backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);">
+            <div class="container">
+                <a class="navbar-brand fw-bold d-flex align-items-center" href="{{ url_for('main.index') }}">
                     <img src="{{ url_for('static', filename='logo_image/logo2.webp') }}" alt="LunaTide ロゴ" class="me-2"
-                        style="height: 40px;">
+                        style="height: 32px;">
+                    <span style="letter-spacing: -0.5px;">Astro Navigator</span>
                 </a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
                     aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
@@ -100,12 +101,21 @@
     </main>
 
     <!-- Footer -->
-    <footer class="text-white text-center py-4">
-        <p class="mb-0">&copy; 2026 Astro Navigator. All Rights Reserved.</p>
-        <p class="mb-0">
-            <a href="{{ url_for('main.privacy') }}" class="text-white text-decoration-none">プライバシーポリシー</a> |
-            <a href="{{ url_for('main.terms') }}" class="text-white text-decoration-none">利用規約</a>
-        </p>
+    <footer class="mt-auto py-5 border-top border-white border-opacity-10"
+        style="background: rgba(9, 7, 27, 0.95); backdrop-filter: blur(5px);">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-6 text-md-start text-center mb-3 mb-md-0">
+                    <p class="mb-0 opacity-50">&copy; 2026 Astro Navigator. キャプチャした夜空を、永遠に。</p>
+                </div>
+                <div class="col-md-6 text-md-end text-center">
+                    <a href="{{ url_for('main.privacy') }}"
+                        class="text-white text-decoration-none opacity-75 hover-opacity-100 me-3 small">プライバシーポリシー</a>
+                    <a href="{{ url_for('main.terms') }}"
+                        class="text-white text-decoration-none opacity-75 hover-opacity-100 small">利用規約</a>
+                </div>
+            </div>
+        </div>
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

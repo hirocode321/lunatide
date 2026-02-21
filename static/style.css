@@ -1,12 +1,14 @@
 :root {
-    --space-bg: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
-    --moon-glow: rgba(255, 255, 255, 0.1);
-    --glass-bg: rgba(255, 255, 255, 0.05);
-    --glass-border: rgba(255, 255, 255, 0.1);
-    --text-primary: #f8f9fa;
-    --text-secondary: #adb5bd;
+    --space-bg: linear-gradient(135deg, #09071b 0%, #1a1645 50%, #12122b 100%);
+    --moon-glow: rgba(255, 255, 255, 0.15);
+    --glass-bg: rgba(255, 255, 255, 0.03);
+    --glass-bg-hover: rgba(255, 255, 255, 0.08);
+    --glass-border: rgba(255, 255, 255, 0.08);
+    --text-primary: #ffffff;
+    --text-secondary: rgba(255, 255, 255, 0.6);
     --accent-blue: #00d2ff;
     --accent-purple: #9d50bb;
+    --card-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
 }
 
 body {
@@ -128,13 +130,46 @@ body {
 @keyframes fadeIn {
     from {
         opacity: 0;
-        transform: translateY(10px);
+        transform: translateY(20px);
     }
 
     to {
         opacity: 1;
         transform: translateY(0);
     }
+}
+
+/* Staggered Entrance */
+.calendar-day {
+    animation: fadeIn 0.6s ease-out both;
+}
+
+.calendar-day:nth-child(7n+1) {
+    animation-delay: 0.1s;
+}
+
+.calendar-day:nth-child(7n+2) {
+    animation-delay: 0.15s;
+}
+
+.calendar-day:nth-child(7n+3) {
+    animation-delay: 0.2s;
+}
+
+.calendar-day:nth-child(7n+4) {
+    animation-delay: 0.25s;
+}
+
+.calendar-day:nth-child(7n+5) {
+    animation-delay: 0.3s;
+}
+
+.calendar-day:nth-child(7n+6) {
+    animation-delay: 0.35s;
+}
+
+.calendar-day:nth-child(7n+7) {
+    animation-delay: 0.4s;
 }
 
 /* Calendar Grid Upgrade */
@@ -160,20 +195,24 @@ body {
 
 .calendar-day {
     min-height: 120px;
-    padding: 0.8rem;
+    padding: 1rem;
     background: var(--glass-bg);
-    backdrop-filter: blur(10px);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     border: 1px solid var(--glass-border);
-    border-radius: 12px;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 16px;
+    transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
     position: relative;
     overflow: hidden;
+    display: flex;
+    flex-direction: column;
 }
 
 .calendar-day:hover {
-    transform: translateY(-5px) scale(1.02);
-    border-color: var(--accent-blue);
-    background: rgba(255, 255, 255, 0.1);
+    transform: translateY(-8px);
+    border-color: rgba(0, 210, 255, 0.4);
+    background: var(--glass-bg-hover);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
     z-index: 10;
 }
 
@@ -244,34 +283,83 @@ body {
     }
 }
 
-/* Responsive Grid */
+/* Responsive Layout Switch: Grid to List */
 @media (max-width: 768px) {
+    .calendar-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .calendar-header {
+        display: none;
+        /* Hide Sun/Mon/etc headers in list view */
+    }
+
     .calendar-day {
-        min-height: 90px;
-        padding: 0.5rem;
+        min-height: auto;
+        flex-direction: row;
+        align-items: center;
+        padding: 1rem;
+        background: linear-gradient(90deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.01) 100%);
     }
 
     .day-number {
-        font-size: 0.9rem;
+        font-size: 1.5rem;
+        margin-bottom: 0;
+        width: 50px;
+        flex-shrink: 0;
+        text-align: center;
+        border-right: 1px solid var(--glass-border);
+        margin-right: 1rem;
+    }
+
+    .moon-info {
+        flex-direction: row;
+        margin-top: 0;
+        flex-grow: 1;
+        justify-content: flex-start;
+        align-items: center;
+    }
+
+    .moon-img-sm {
+        width: 40px;
+        height: 40px;
+        margin-right: 1rem;
     }
 
     .moon-age-text {
-        font-size: 0.6rem;
+        display: block !important;
+        margin-top: 0;
+        font-size: 0.8rem;
+    }
+
+    .day-today::after {
+        top: 10px;
+        right: 15px;
+    }
+
+    .event-marker {
+        position: static;
+        margin-left: auto;
+        margin-right: 10px;
+    }
+
+    .photo-marker {
+        position: static !important;
+        margin-left: 10px;
     }
 }
 
-.navbar {
-    background: rgba(15, 12, 41, 0.8) !important;
-    backdrop-filter: blur(10px);
-    border-bottom: 1px solid var(--glass-border);
-}
-
+/* Base Card & UI Refinement */
 .card {
     background: var(--glass-bg);
-    backdrop-filter: blur(12px);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
     border: 1px solid var(--glass-border) !important;
-    color: var(--text-primary);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border-radius: 20px;
+    box-shadow: var(--card-shadow);
+    transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
 }
 
 .card.text-dark {
@@ -319,11 +407,36 @@ body {
 }
 
 /* Custom Badge Colors for Astro Events */
-.badge-lunar-eclipse { background-color: #d63031 !important; color: #fff !important; } /* Blood Moon Red */
-.badge-meteor-shower { background-color: #fdcb6e !important; color: #2d3436 !important; } /* Meteor Gold */
-.badge-planetary { background-color: #0984e3 !important; color: #fff !important; } /* Planet Blue */
-.badge-full-moon { background-color: #dfe6e9 !important; color: #2d3436 !important; } /* Moon Silver */
-.badge-rare { background-color: #6c5ce7 !important; color: #fff !important; } /* Rare Purple */
+.badge-lunar-eclipse {
+    background-color: #d63031 !important;
+    color: #fff !important;
+}
+
+/* Blood Moon Red */
+.badge-meteor-shower {
+    background-color: #fdcb6e !important;
+    color: #2d3436 !important;
+}
+
+/* Meteor Gold */
+.badge-planetary {
+    background-color: #0984e3 !important;
+    color: #fff !important;
+}
+
+/* Planet Blue */
+.badge-full-moon {
+    background-color: #dfe6e9 !important;
+    color: #2d3436 !important;
+}
+
+/* Moon Silver */
+.badge-rare {
+    background-color: #6c5ce7 !important;
+    color: #fff !important;
+}
+
+/* Rare Purple */
 
 footer {
     background: rgba(15, 12, 41, 0.9) !important;

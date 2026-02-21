@@ -129,6 +129,28 @@ def init_db():
         )
     ''')
 
+    # astro_cache テーブル (月単位の計算結果キャッシュ)
+    cursor_moon.execute('''
+        CREATE TABLE IF NOT EXISTS astro_cache (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            prefecture TEXT NOT NULL,
+            year INTEGER NOT NULL,
+            month INTEGER NOT NULL,
+            data_json TEXT NOT NULL,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(prefecture, year, month)
+        )
+    ''')
+
+    # iss_tle_cache テーブル (ISSの軌道要素キャッシュ)
+    cursor_moon.execute('''
+        CREATE TABLE IF NOT EXISTS iss_tle_cache (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            tle_data TEXT NOT NULL,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+
     # photo_logs テーブル
     cursor_moon.execute('''
         CREATE TABLE IF NOT EXISTS photo_logs (
