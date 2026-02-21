@@ -1,9 +1,13 @@
+"""
+外部天気API（Open-Meteo）を利用して、指定された場所や都道府県の天気情報を取得・キャッシュするモジュール。
+特に撮影計画に役立つ「雲量」や、独自の「星空指数」の計算を行います。
+"""
 import requests
 from datetime import datetime
 import json
 import sqlite3
 
-# 47都道府県の庁舎所在地（代表点）の座標
+# 日本の主要地点（47都道府県庁所在地など）の緯度・経度定義
 PREFECTURE_COORDS = {
     "札幌(北海道)": {"lat": 43.06417, "lng": 141.34694},
     "根室(北海道)": {"lat": 43.3301, "lng": 145.5828}, # 追加
@@ -56,6 +60,7 @@ PREFECTURE_COORDS = {
     "那覇(沖縄県)": {"lat": 26.2125, "lng": 127.68111}
 }
 
+# Open-Meteoの天気コード(WMO Weather interpretation codes)と日本語表記の対応表
 WEATHER_CODE_MAP = {
     0: "快晴",
     1: "晴れ",
@@ -203,13 +208,16 @@ def get_weather_info(prefecture, date_str):
 def get_weather_by_coords(lat, lng, date_str):
     """
     指定された緯度経度と日付の天気情報（雲量、天気内容）を取得する。
-    Open-Meteo APIを使用する。(キャッシュなしの簡易版)
+    Open-Meteo APIを使用する。(キャッシュなしの動的取得版)
+    主に「海辺の撮影地マップ」にて、任意の地点の詳細情報を表示する際に利用される。
     """
     try:
+        # 要求された日付と現在日との差分日数を計算
         target_date = datetime.strptime(date_str, '%Y-%m-%d').date()
         today = datetime.now().date()
         diff_days = (target_date - today).days
 
+        # 11日以内なら詳細な予報API(JMAモデル)を使用し、過去の日付ならアーカイブデータAPIを使用する。
         if 0 <= diff_days <= 11:
             url = f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lng}&hourly=cloud_cover,weather_code&models=jma&start_date={date_str}&end_date={date_str}&timezone=Asia%2FTokyo"
         elif diff_days < 0:
@@ -226,12 +234,15 @@ def get_weather_by_coords(lat, lng, date_str):
             cloud_covers = data["hourly"].get("cloud_cover", [])
             weather_codes = data["hourly"].get("weather_code", [])
             
+            # 天体観測の指標として、夜間（21時）のデータを代表値として採用する。
             idx = 21 if len(cloud_covers) > 21 else (len(cloud_covers) - 1)
             
             if idx >= 0:
                 cloud_pct = cloud_covers[idx]
                 code = weather_codes[idx]
                 
+                # 星空指数 (0 - 100) の計算
+                # 雲量が少ないほど100に近づくが、雨や霧などの悪天候時は強制的に指数を下げる独自のロジック。
                 starry_index = max(0, 100 - cloud_pct)
                 if code >= 50:
                     starry_index = 0

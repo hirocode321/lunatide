@@ -1,15 +1,20 @@
+"""
+Skyfieldライブラリを使用して、太陽・月の出没時刻や月齢などの天文学的数値を計算するモジュール。
+高精度な位置情報に基づく天文イベントを提供します。
+"""
 from skyfield.api import Loader, wgs84
 from skyfield import almanac
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 import os
 
-# Save ephemeris data in the data directory
+# 天体暦データの保存と読み込み（data/skyfieldディレクトリに保持）
 load = Loader(os.path.join(os.path.dirname(__file__), '..', 'data', 'skyfield'))
-eph = load('de421.bsp')
-ts = load.timescale()
-tz = ZoneInfo('Asia/Tokyo')
+eph = load('de421.bsp') # 基本的な天体位置データ
+ts = load.timescale()   # 時間スケールの初期化
+tz = ZoneInfo('Asia/Tokyo') # 日本標準時(JST)を使用
 
+# カレンダー表示などに使用される都道府県別代表点の座標
 PREF_COORDS = {
     "札幌(北海道)": (43.0642, 141.3469),
     "根室(北海道)": (43.3300, 145.5828),
@@ -63,6 +68,9 @@ PREF_COORDS = {
 }
 
 def get_sun_events(prefecture_name, date_str):
+    """
+    指定された都道府県の代表点における太陽イベント（日の出、日の入り、薄明）を取得します。
+    """
     if prefecture_name not in PREF_COORDS:
         prefecture_name = "東京(東京都)"
         
@@ -117,6 +125,10 @@ def get_sun_events(prefecture_name, date_str):
     return res
 
 def get_sun_events_by_coords(lat, lon, date_str):
+    """
+    指定された緯度・経度と日付から、その場所における太陽イベントを計算する。（任意座標の動的計算用）
+    日の出、日の入り、および撮影可能時間帯に影響する 薄明（Twilight）の開始・終了時刻を skyfield を使って算出する。
+    """
     location = wgs84.latlon(lat, lon)
     
     try:
@@ -203,7 +215,10 @@ def get_moon_data(prefecture_name, date_str):
     }
 
 def get_moon_data_by_coords(lat, lon, date_str):
-    """Calculate Moon age, moonrise, and moonset directly by coordinates."""
+    """
+    指定された緯度・経度と日付から、月の出、月の入り時刻、および正午時点の月齢を計算する。
+    海辺の撮影地マップなど、任意の地点の天文情報を取得したい場合に利用する。
+    """
     location = wgs84.latlon(lat, lon)
     
     try:
@@ -239,7 +254,10 @@ def get_moon_data_by_coords(lat, lon, date_str):
     }
 
 def get_moon_data_month(prefecture_name, year, month):
-    """Calculate Moon data for the entire month to be used in calendars."""
+    """
+    1ヶ月分の月の出・月の入り・月齢などのデータを一括計算します。
+    月のカレンダー表示用に使用されます。
+    """
     import calendar
     
     if prefecture_name not in PREF_COORDS:
@@ -289,7 +307,10 @@ def get_moon_data_month(prefecture_name, year, month):
     return month_data
 
 def get_timeline_events(prefecture_name, date_str):
-    """Combine sun, twilight, moon, and ISS events into a chronologically sorted timeline."""
+    """
+    太陽・月・薄明・ISS(国際宇宙ステーション)のイベントを統合し、時系列順に並べたタイムラインを生成します。
+    その日の主要な天体・撮影情報を把握するために使用されます。
+    """
     sun_data = get_sun_events(prefecture_name, date_str)
     moon_data = get_moon_data(prefecture_name, date_str)
     
