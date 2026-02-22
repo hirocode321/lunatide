@@ -1,0 +1,131 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ spot.name }}の潮汐表と星空撮影ガイド - LunaTide{% endblock %}
+{% block og_title %}{{ spot.name }}の潮汐表と星空撮影ガイド - LunaTide{% endblock %}
+{% block meta_description %}{{ spot.name }}での星空・ウユニ塩湖風リフレクション撮影に必須の干満グラフとマップ。{{ spot.note }}{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+
+<div class="container my-5 fade-in">
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('main.index') }}"
+                    class="text-decoration-none text-info">ホーム</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('sea_spots.sea_spots') }}"
+                    class="text-decoration-none text-info">海辺の撮影地マップ</a></li>
+            <li class="breadcrumb-item active text-light" aria-current="page">{{ spot.name }}</li>
+        </ol>
+    </nav>
+
+    <div class="row mb-4 align-items-center">
+        <div class="col-12">
+            <h1 class="display-5 fw-bold"><i class="fas fa-map-marker-alt text-primary me-3"></i>{{ spot.name }}</h1>
+            <p class="text-secondary lead">{{ spot.note }}</p>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-5">
+        <div class="col-lg-6">
+            <h3 class="h5 border-bottom border-secondary pb-2 mb-3"><i class="fas fa-water text-info me-2"></i>干満グラフ
+            </h3>
+            <div class="card bg-dark border-secondary">
+                <div class="card-body text-center">
+                    <div class="mb-3 d-flex justify-content-center align-items-center gap-2">
+                        <label for="tideDate" class="form-label text-light mb-0">日付を選択:</label>
+                        <input type="date" id="tideDate" class="form-control bg-dark text-white border-secondary w-auto"
+                            value="{{ today }}">
+                    </div>
+
+                    <div id="tideLoading" class="my-4">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">読み込み中...</span>
+                        </div>
+                        <p class="text-secondary mt-2 small">グラフデータを取得中...</p>
+                    </div>
+
+                    <img id="tideImage" src="" alt="{{ spot.name }}の潮汐グラフ" class="img-fluid rounded shadow"
+                        style="display: none; width: 100%;">
+
+                    <div id="tideError" class="alert alert-danger d-none mt-3" role="alert">
+                        データが取得できませんでした。
+                    </div>
+                </div>
+            </div>
+            <div class="mt-3 text-secondary small">
+                <p><i class="fas fa-info-circle me-1"></i>干潮の前後1〜2時間が、干潟でのリフレクション（反射）撮影に適したタイミングです。</p>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <h3 class="h5 border-bottom border-secondary pb-2 mb-3"><i class="fas fa-map text-info me-2"></i>アクセスマップ
+            </h3>
+            <div id="map" class="rounded shadow position-relative z-0" style="height: 400px; width: 100%;"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script>
+    const spot = {{ spot | tojson }};
+
+    // Initialize map
+    const map = L.map('map').setView([spot.lat, spot.lng], 12);
+
+    // Dark theme map tiles
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
+        subdomains: 'abcd',
+        maxZoom: 20
+    }).addTo(map);
+
+    // Custom wave icon
+    const waveIcon = L.divIcon({
+        html: '<i class="fas fa-water fa-2x text-primary" style="filter: drop-shadow(0 0 10px rgba(13,110,253,0.8));"></i>',
+        className: 'custom-leaflet-icon',
+        iconAnchor: [12, 24],
+        popupAnchor: [0, -24]
+    });
+
+    L.marker([spot.lat, spot.lng], { icon: waveIcon }).addTo(map)
+        .bindPopup(`<b>${spot.name}</b>`).openPopup();
+
+    // Tide Logic
+    function fetchTideData() {
+        const dateStr = document.getElementById('tideDate').value;
+        const imgEl = document.getElementById('tideImage');
+        const loadingEl = document.getElementById('tideLoading');
+        const errorEl = document.getElementById('tideError');
+
+        imgEl.style.display = 'none';
+        errorEl.classList.add('d-none');
+        loadingEl.classList.remove('d-none');
+
+        fetch(`/api/sea_spots/${spot.id}/tide?date=${dateStr}`)
+            .then(res => res.json())
+            .then(data => {
+                loadingEl.classList.add('d-none');
+                if (data.image_url) {
+                    imgEl.src = data.image_url;
+                    imgEl.style.display = 'block';
+                } else {
+                    errorEl.textContent = data.error || "データ取得失敗";
+                    errorEl.classList.remove('d-none');
+                }
+            })
+            .catch(err => {
+                loadingEl.classList.add('d-none');
+                errorEl.textContent = "通信エラー";
+                errorEl.classList.remove('d-none');
+            });
+    }
+
+    document.getElementById('tideDate').addEventListener('change', fetchTideData);
+
+    // Initial fetch
+    document.addEventListener('DOMContentLoaded', fetchTideData);
+</script>
+{% endblock %}

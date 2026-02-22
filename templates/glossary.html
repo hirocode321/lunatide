@@ -1,0 +1,152 @@
+{% extends 'base.html' %}
+
+{% block title %}星空撮影・天体観測の用語集 - LunaTide{% endblock %}
+{% block og_title %}星空撮影・天体観測の用語集 - LunaTide{% endblock %}
+{% block meta_description %}星空・風景写真や天体観測に必要なキーワードを分かりやすく解説。月齢、大潮・小潮、薄明時間など、撮影の成功率を高めるための知識が満載です。{% endblock %}
+
+{% block content %}
+<div class="container my-5 fade-in">
+    <div class="row mb-5 text-center">
+        <div class="col-12">
+            <h1 class="display-5 fw-bold"><i class="fas fa-book-open text-primary me-3"></i>星空撮影・天体観測の用語集</h1>
+            <p class="text-secondary lead">月齢や潮汐、時間帯の呼び名など、撮影計画に必須のキーワードをわかりやすく解説します。</p>
+        </div>
+    </div>
+
+    <!-- 検索バー -->
+    <div class="row justify-content-center mb-5">
+        <div class="col-md-8 col-lg-6">
+            <div class="input-group input-group-lg shadow">
+                <span class="input-group-text bg-secondary border-0 text-light"><i class="fas fa-search"></i></span>
+                <input type="text" id="glossarySearch" class="form-control bg-dark text-white border-0"
+                    placeholder="調べたい用語を入力...">
+            </div>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+
+            <!-- Category 1 -->
+            <h2 class="h4 border-bottom border-primary pb-2 mb-4 text-light"><i
+                    class="fas fa-moon text-warning me-2"></i>月に関する用語</h2>
+            <dl class="row mb-5 glossary-list">
+                <dt class="col-sm-3 text-info fs-5 glossary-term" data-term="月齢">月齢 (Age of the Moon)</dt>
+                <dd class="col-sm-9 text-secondary mb-4">
+                    新月を0とし、そこから何日経過したかを表す数値。約29.5日で1周します。
+                    <ul class="mt-2">
+                        <li><strong>月齢0:</strong> 新月。星空撮影に最も適しています。</li>
+                        <li><strong>月齢7〜8:</strong> 上弦の月（半月）。</li>
+                        <li><strong>月齢14〜15:</strong> 満月。星空は見えにくくなりますが、月光を活かした風景写真に最適です。</li>
+                    </ul>
+                </dd>
+
+                <dt class="col-sm-3 text-info fs-5 glossary-term" data-term="新月">新月 (New Moon)</dt>
+                <dd class="col-sm-9 text-secondary mb-4">
+                    地球から見て月が太陽と同じ方向にある状態。夜夜中に月明かりがないため、天の川や淡い星雲の撮影に絶好のチャンスとなります。
+                </dd>
+            </dl>
+
+            <!-- Category 2 -->
+            <h2 class="h4 border-bottom border-primary pb-2 mb-4 text-light"><i
+                    class="fas fa-water text-primary me-2"></i>潮汐（干満）に関する用語</h2>
+            <dl class="row mb-5 glossary-list">
+                <dt class="col-sm-3 text-info fs-5 glossary-term" data-term="大潮">大潮 (Spring Tide)</dt>
+                <dd class="col-sm-9 text-secondary mb-4">
+                    満月と新月の時期に起こる、満潮と干潮の「潮位の差」が最も大きくなる状態です。
+                    リフレクション（ウユニ塩湖風）撮影を狙う場合、潮が大きく引く大潮〜中潮の干潮時が最も広大な干潟や水鏡を作ります。
+                </dd>
+
+                <dt class="col-sm-3 text-info fs-5 glossary-term" data-term="小潮">小潮 (Neap Tide)</dt>
+                <dd class="col-sm-9 text-secondary mb-4">
+                    上弦の月・下弦の月（半月）の時期に起こる、満潮と干潮の「潮位の差」が最も小さくなる状態です。
+                    潮があまり引かないため、海岸での広角撮影には不向きな場合があります。
+                </dd>
+
+                <dt class="col-sm-3 text-info fs-5 glossary-term" data-term="干潟">干潟 (Tidal Flat)</dt>
+                <dd class="col-sm-9 text-secondary mb-4">
+                    海岸付近で、潮が引いたとき（干潮時）に現れる砂や泥の平地の総称。ここに薄く海水が残ることで、空を反射する「水鏡」が完成します。
+                </dd>
+            </dl>
+
+            <!-- Category 3 -->
+            <h2 class="h4 border-bottom border-primary pb-2 mb-4 text-light"><i
+                    class="fas fa-sun text-danger me-2"></i>時間帯・光に関する用語</h2>
+            <dl class="row mb-5 glossary-list">
+                <dt class="col-sm-3 text-info fs-5 glossary-term" data-term="薄明 トワイライト">薄明 (Twilight)</dt>
+                <dd class="col-sm-9 text-secondary mb-4">
+                    日の出前、または日没後の、空がうっすらと明るい時間帯のこと。太陽の沈み具合によって3つの段階に分かれます。
+                    <div class="row mt-3">
+                        <div class="col-md-4 mb-2">
+                            <div class="card bg-dark border-secondary h-100">
+                                <div class="card-body p-3">
+                                    <h6 class="text-light">市民薄明</h6>
+                                    <p class="small text-muted mb-0">太陽高度
+                                        -0°〜-6°。<br>外で本が読める明るさ。マジックアワーやブルーアワーと呼ばれる美しい写真が撮れる時間帯。</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-2">
+                            <div class="card bg-dark border-secondary h-100">
+                                <div class="card-body p-3">
+                                    <h6 class="text-light">航海薄明</h6>
+                                    <p class="small text-muted mb-0">太陽高度 -6°〜-12°。<br>海と空の境界（水平線）が見分けられる限界。明るい星が見え始めます。
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-2">
+                            <div class="card bg-dark border-secondary h-100">
+                                <div class="card-body p-3">
+                                    <h6 class="text-light">天文薄明</h6>
+                                    <p class="small text-muted mb-0">太陽高度
+                                        -12°〜-18°。<br>6等星までの全ての星が見える限界。これより太陽が沈むと「完全な夜」となります。</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </dd>
+
+                <dt class="col-sm-3 text-info fs-5 glossary-term" data-term="光害">光害 (Light Pollution)</dt>
+                <dd class="col-sm-9 text-secondary mb-4">
+                    街灯やネオンなどの人工の光によって、夜空が明るくなり星が見えにくくなる現象のこと。
+                    星空撮影では、この光害が少ない（暗い）場所を選ぶことが重要です。「Bortle Scale（ボートル・スケール）」という1〜9の指標で暗さを表すことが一般的です（数字が小さいほど暗く美しい星空）。
+                </dd>
+            </dl>
+
+        </div>
+    </div>
+</div>
+
+<script>
+    // リアルタイム検索機能
+    document.getElementById('glossarySearch').addEventListener('input', function (e) {
+        const query = e.target.value.toLowerCase().trim();
+        const terms = document.querySelectorAll('.glossary-term');
+
+        terms.forEach(dt => {
+            const termText = dt.getAttribute('data-term').toLowerCase();
+            const dd = dt.nextElementSibling; // 次の <dd> 要素を取得
+
+            if (termText.includes(query)) {
+                dt.style.display = '';
+                dd.style.display = '';
+            } else {
+                dt.style.display = 'none';
+                dd.style.display = 'none';
+            }
+        });
+
+        // カテゴリー見出しの表示・非表示制御 (関連する用語がすべて非表示なら見出しも隠す)
+        const categories = document.querySelectorAll('.glossary-list');
+        categories.forEach(list => {
+            const hasVisibleTerm = Array.from(list.querySelectorAll('dt')).some(dt => dt.style.display !== 'none');
+            const heading = list.previousElementSibling;
+            if (heading && heading.tagName === 'H2') {
+                heading.style.display = hasVisibleTerm ? '' : 'none';
+            }
+            list.style.display = hasVisibleTerm ? '' : 'none';
+        });
+    });
+</script>
+{% endblock %}
