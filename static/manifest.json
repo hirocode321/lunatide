@@ -3,9 +3,18 @@
     "short_name": "LunaTide",
     "description": "月齢、潮汐、そして天体イベントを美しく、正確に。あなたの夜空への案内人。",
     "start_url": "/",
+    "scope": "/",
+    "lang": "ja",
+    "dir": "ltr",
     "display": "standalone",
+    "orientation": "portrait",
     "background_color": "#0b0e14",
     "theme_color": "#0b0e14",
+    "categories": [
+        "weather",
+        "photography",
+        "reference"
+    ],
     "icons": [
         {
             "src": "/static/icon-192.png",

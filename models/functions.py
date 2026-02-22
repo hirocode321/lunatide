@@ -176,7 +176,7 @@ def init_db():
         )
     ''')
 
-    # photo_spots テーブル
+    # photo_spots テーブル (海辺の撮影地用)
     cursor_moon.execute('''
         CREATE TABLE IF NOT EXISTS photo_spots (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -187,8 +187,25 @@ def init_db():
             nearest_port_id TEXT,
             is_private BOOLEAN DEFAULT 0,
             description TEXT,
+            tags TEXT,
+            image_filename TEXT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (user_id) REFERENCES users (id)
+        )
+    ''')
+
+    # observation_spots テーブル (観測スポット用)
+    cursor_moon.execute('''
+        CREATE TABLE IF NOT EXISTS observation_spots (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            latitude REAL NOT NULL,
+            longitude REAL NOT NULL,
+            description TEXT,
+            bortle_scale INTEGER,
+            rating INTEGER DEFAULT 3,
+            thumbnail_filename TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
 

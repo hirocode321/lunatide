@@ -167,44 +167,63 @@
     </div>
 </div>
 
-<!-- Add Spot Modal Mock -->
+<!-- Add Spot Modal -->
 <div class="modal fade" id="addSpotModal" tabindex="-1" aria-labelledby="addSpotModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered border-secondary shadow-lg">
         <div class="modal-content bg-dark text-white">
             <div class="modal-header border-secondary">
                 <h5 class="modal-title" id="addSpotModalLabel"><i
-                        class="fas fa-map-marker-alt text-primary me-2"></i>スポットを登録 (モック)</h5>
+                        class="fas fa-map-marker-alt text-primary me-2"></i>新しいスポットを登録</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
                     aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <div class="alert alert-info bg-opacity-10 border-info small">
-                    <i class="fas fa-hammer me-2"></i>これは開発中のモック機能です。保存しても実際のデータベースには追加されません。
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">スポット名</label>
-                    <input type="text" class="form-control bg-secondary text-white border-0" placeholder="例: 〇〇高原">
-                </div>
-                <div class="row mb-3">
-                    <div class="col-6">
-                        <label class="form-label">緯度 (Latitude)</label>
-                        <input type="text" class="form-control bg-secondary text-white border-0" placeholder="35.000">
+                <form id="addSpotForm">
+                    <div class="mb-3">
+                        <label class="form-label">スポット名 <span class="text-danger">*</span></label>
+                        <input type="text" id="spotName" class="form-control bg-secondary text-white border-0"
+                            placeholder="例: 〇〇高原" required>
                     </div>
-                    <div class="col-6">
-                        <label class="form-label">経度 (Longitude)</label>
-                        <input type="text" class="form-control bg-secondary text-white border-0" placeholder="135.000">
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <label class="form-label">緯度 (Latitude)</label>
+                            <input type="text" id="spotLat" class="form-control bg-secondary text-white border-0"
+                                placeholder="35.000" readonly>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label">経度 (Longitude)</label>
+                            <input type="text" id="spotLng" class="form-control bg-secondary text-white border-0"
+                                placeholder="135.000" readonly>
+                        </div>
+                        <div class="mt-1 small text-secondary">
+                            <i class="fas fa-info-circle me-1"></i>地図上を直接クリックして場所を指定することもできます。
+                        </div>
                     </div>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">メモ・環境</label>
-                    <textarea class="form-control bg-secondary text-white border-0" rows="3"
-                        placeholder="トイレの有無、駐車場の広さなど"></textarea>
-                </div>
+                    <div class="mb-3">
+                        <label class="form-label">評価</label>
+                        <select id="spotRating" class="form-select bg-secondary text-white border-0">
+                            <option value="5">⭐⭐⭐⭐⭐ (最高)</option>
+                            <option value="4">⭐⭐⭐⭐</option>
+                            <option value="3" selected>⭐⭐⭐ (普通)</option>
+                            <option value="2">⭐⭐</option>
+                            <option value="1">⭐</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">メモ・環境</label>
+                        <textarea id="spotNote" class="form-control bg-secondary text-white border-0" rows="3"
+                            placeholder="トイレの有無、駐車場の広さなど"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">現地の写真（任意）</label>
+                        <input type="file" id="spotImage" class="form-control bg-secondary text-white border-0"
+                            accept="image/*">
+                    </div>
+                </form>
             </div>
             <div class="modal-footer border-secondary">
                 <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">キャンセル</button>
-                <button type="button" class="btn btn-primary" data-bs-dismiss="modal"
-                    onclick="alert('スポットを保存しました！（※モックの動作です）')">保存する</button>
+                <button type="button" class="btn btn-primary" onclick="submitSpot()">登録する</button>
             </div>
         </div>
     </div>
@@ -240,9 +259,10 @@
     // Add markers
     spots.forEach(spot => {
         const marker = L.marker([spot.lat, spot.lng], { icon: starIcon }).addTo(map);
-        marker.bindPopup(`
+        let popupContent = `
             <div class="text-center p-1" style="min-width: 150px;">
                 <h6 class="mb-1 fw-bold border-bottom border-secondary pb-1">${spot.name}</h6>
+                ${spot.thumbnail ? `<img src="/static/uploads/observation_spots/${spot.thumbnail}" class="img-fluid rounded mb-2" style="max-height: 100px; width: 100%; object-fit: cover;">` : ''}
                 <div class="small text-warning mb-2"><i class="fas fa-star"></i> ${spot.rating}/5 (Bortle: ${spot.bortle})</div>
                 <div class="d-flex justify-content-center gap-1 mb-1">
                     <button class="btn btn-sm btn-primary py-1 px-2 rounded-pill" onclick="showWeatherModal(${spot.lat}, ${spot.lng}, '${spot.name}', ${spot.id})">
@@ -251,9 +271,87 @@
                 </div>
                 <p class="small mb-0 opacity-75">${spot.note}</p>
             </div>
-        `);
+        `;
+        marker.bindPopup(popupContent);
         markers[spot.id] = marker;
     });
+
+    // Map click event for adding new spot
+    let tempMarker = null;
+    let addSpotModal = null;
+
+    document.addEventListener('DOMContentLoaded', function () {
+        addSpotModal = new bootstrap.Modal(document.getElementById('addSpotModal'));
+    });
+
+    map.on('click', function (e) {
+        if (tempMarker) map.removeLayer(tempMarker);
+
+        const lat = e.latlng.lat;
+        const lng = e.latlng.lng;
+
+        tempMarker = L.marker([lat, lng], {
+            icon: L.divIcon({
+                html: '<i class="fas fa-map-pin fa-2x text-warning pulse-anim"></i>',
+                className: 'custom-leaflet-icon',
+                iconAnchor: [12, 24]
+            })
+        }).addTo(map);
+
+        document.getElementById('spotLat').value = lat.toFixed(5);
+        document.getElementById('spotLng').value = lng.toFixed(5);
+        document.getElementById('spotName').value = '';
+        document.getElementById('spotNote').value = '';
+        document.getElementById('spotImage').value = '';
+
+        if (addSpotModal) addSpotModal.show();
+    });
+
+    // Submit new spot
+    window.submitSpot = function () {
+        const name = document.getElementById('spotName').value.trim();
+        const lat = document.getElementById('spotLat').value;
+        const lng = document.getElementById('spotLng').value;
+        const note = document.getElementById('spotNote').value;
+        const rating = document.getElementById('spotRating').value;
+        const imageFile = document.getElementById('spotImage').files[0];
+
+        if (!name) {
+            alert('スポット名は必須です。');
+            return;
+        }
+        if (!lat || !lng) {
+            alert('緯度経度の情報が不足しています。マップをクリックして位置を指定してください。');
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('name', name);
+        formData.append('lat', lat);
+        formData.append('lng', lng);
+        formData.append('note', note);
+        formData.append('rating', rating);
+        if (imageFile) {
+            formData.append('image', imageFile);
+        }
+
+        fetch("/api/spots/add", {
+            method: "POST",
+            body: formData
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('登録に失敗しました: ' + data.error);
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                alert('エラーが発生しました。');
+            });
+    };
 
     // Function to pan to spot when card is clicked
     window.panToSpot = function (lat, lng, id) {
