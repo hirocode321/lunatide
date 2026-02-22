@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, make_response, url_for, abort, redirect
+from flask import Blueprint, render_template, request, make_response, url_for, abort, redirect, jsonify
 from datetime import datetime, date, timedelta
 import calendar
 import sqlite3
@@ -214,3 +214,11 @@ def sitemap():
 @main_bp.route('/moon/<int:year>/<int:month>/<int:day>')
 def moon_detail(year, month, day):
     return redirect(url_for('moon.moon', date=f"{year}-{month:02d}-{day:02d}"))
+
+@main_bp.route('/api/iss/track')
+def iss_track():
+    from models.astro_calc import get_iss_ground_track
+    track = get_iss_ground_track()
+    if track:
+        return jsonify(track)
+    return jsonify({"error": "Failed to fetch ISS track"}), 500

@@ -35,6 +35,31 @@
         transform: translateY(-5px);
         box-shadow: 0 5px 15px rgba(61, 90, 254, 0.3) !important;
     }
+
+    .iss-pulse {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 20px;
+        height: 20px;
+        background: rgba(77, 182, 172, 0.4);
+        border-radius: 50%;
+        animation: iss-pulsate 2s infinite;
+        z-index: -1;
+    }
+
+    @keyframes iss-pulsate {
+        0% {
+            transform: translate(-50%, -50%) scale(0.5);
+            opacity: 1;
+        }
+
+        100% {
+            transform: translate(-50%, -50%) scale(2.5);
+            opacity: 0;
+        }
+    }
 </style>
 
 <div class="container my-5 fade-in">
@@ -474,6 +499,97 @@
         var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
             return new bootstrap.Tooltip(tooltipTriggerEl)
         });
+
+        // Start ISS tracking
+        initISSTracking();
     });
+
+    // ISS Orbit Visualization Logic
+    let issTrackLayer = null;
+    let issMarker = null;
+
+    function initISSTracking() {
+        fetchISSData();
+        // Refresh every 5 minutes
+        setInterval(fetchISSData, 5 * 60 * 1000);
+    }
+
+    function fetchISSData() {
+        fetch('/api/iss/track')
+            .then(res => res.json())
+            .then(data => {
+                if (data.error) throw new Error(data.error);
+                renderISSTrack(data);
+            })
+            .catch(err => console.error('ISS Track Error:', err));
+    }
+
+    function renderISSTrack(trackData) {
+        if (issTrackLayer) map.removeLayer(issTrackLayer);
+        if (issMarker) map.removeLayer(issMarker);
+
+        const points = trackData.map(t => [t.lat, t.lng]);
+
+        // Split track at date line to avoid "wrapping" lines across the whole map
+        const segments = [];
+        let currentSegment = [trackData[0]];
+
+        for (let i = 1; i < trackData.length; i++) {
+            const prev = trackData[i - 1];
+            const curr = trackData[i];
+
+            // If the longitude jumped by more than 180 deg, it's a wrap
+            if (Math.abs(curr.lng - prev.lng) > 180) {
+                segments.push(currentSegment);
+                currentSegment = [];
+            }
+            currentSegment.push(curr);
+        }
+        segments.push(currentSegment);
+
+        const layerGroup = L.layerGroup();
+
+        segments.forEach(seg => {
+            const segPoints = seg.map(t => [t.lat, t.lng]);
+            // Style based on sunlit status (solid for visible/sunlit, dashed for shadowed)
+            // Note: Since a segment might have mixed status, we simplify to the segment's majority or just styling the whole polyline.
+            // For better UX, we'll draw one polyline that is dashed overall but has a pulse at the CURRENT position.
+
+            L.polyline(segPoints, {
+                color: '#4db6ac',
+                weight: 2,
+                opacity: 0.6,
+                dashArray: '5, 5'
+            }).addTo(layerGroup);
+        });
+
+        issTrackLayer = layerGroup.addTo(map);
+
+        // Marker for Current position (the first point in trackData is 'now')
+        const current = trackData[0];
+        const issIcon = L.divIcon({
+            html: `
+                <div class="iss-container">
+                    <i class="fas fa-satellite fa-lg text-info" style="filter: drop-shadow(0 0 5px rgba(77,182,172,0.8));"></i>
+                    <div class="iss-pulse"></div>
+                </div>
+            `,
+            className: 'custom-leaflet-icon',
+            iconSize: [30, 30],
+            iconAnchor: [15, 15]
+        });
+
+        issMarker = L.marker([current.lat, current.lng], { icon: issIcon }).addTo(map);
+        issMarker.bindPopup(`
+            <div class="text-center p-1">
+                <h6 class="mb-1 fw-bold text-info"><i class="fas fa-satellite me-1"></i>ISS (国際宇宙ステーション)</h6>
+                <div class="small mb-1">現在地を通過中</div>
+                <div class="badge ${current.is_sunlit ? 'bg-success' : 'bg-secondary'} mb-1">
+                    ${current.is_sunlit ? '日照あり' : '日陰'}
+                </div>
+                <div class="x-small opacity-75">${current.lat.toFixed(2)}, ${current.lng.toFixed(2)}</div>
+            </div>
+        `);
+    }
 </script>
 {% endblock %}

@@ -542,3 +542,37 @@ def get_timeline_events(prefecture_name, date_str):
     
     # Optional: Calculate dark/light duration block if needed
     return events
+
+def get_iss_ground_track():
+    """
+    ISSの現在位置と、今後90分間（約1周分）の地上軌跡を計算します。
+    """
+    from skyfield.api import EarthSatellite
+    
+    iss_tle = _get_iss_tle()
+    if not iss_tle or len(iss_tle) < 3:
+        return None
+        
+    iss_sat = EarthSatellite(iss_tle[1], iss_tle[2], iss_tle[0], ts)
+    
+    now = datetime.now(tz)
+    # タイムライン（現在から90分間、1分刻み）
+    times = [now + timedelta(minutes=i) for i in range(91)]
+    t_scale = ts.from_datetimes(times)
+    
+    geocentric = iss_sat.at(t_scale)
+    subpoints = wgs84.subpoint(geocentric)
+    
+    # 日照状況の判定
+    is_sunlit = geocentric.is_sunlit(eph)
+    
+    track = []
+    for i in range(len(times)):
+        track.append({
+            'time': times[i].strftime('%H:%M'),
+            'lat': subpoints.latitude.degrees[i],
+            'lng': subpoints.longitude.degrees[i],
+            'is_sunlit': bool(is_sunlit[i])
+        })
+        
+    return track
